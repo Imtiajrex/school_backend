@@ -9,4 +9,5 @@ class Results extends Model
 {
     use HasFactory;
     protected $table = "results";
+    public $timestamps = false;
 }

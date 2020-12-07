@@ -16,10 +16,10 @@ class CreateStudentsPaymentInfo extends Migration
         Schema::create('students_payment_info', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger("student_id");
-            $table->string("student_fees_category");
+            $table->string("student_payment_category");
             $table->string("student_default_fees");
 
-            $table->foreign("student_id")->references("id")->on("students_base_info")->onDelete('cascade');
+            $table->foreign("student_id")->references("id")->on("students")->onDelete('cascade');
         });
     }
 

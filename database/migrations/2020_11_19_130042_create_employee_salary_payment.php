@@ -24,7 +24,7 @@ class CreateEmployeeSalaryPayment extends Migration
             $table->time("time");
 
 
-            $table->foreign("employee_id")->references("id")->on("employee_base_info")->onDelete('cascade');
+            $table->foreign("employee_id")->references("id")->on("employee")->onDelete('cascade');
         });
     }
 

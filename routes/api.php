@@ -1,10 +1,8 @@
 <?php
 
-use App\Http\Controllers\API\Settings\ClassHasDepartmentController;
-use App\Http\Controllers\API\Settings\ClassHasSubjectsController;
-use App\Http\Controllers\API\Settings\ReligionController;
-use App\Http\Controllers\API\Settings\SchoolClassController;
+
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\API\Settings\UserController;
 use App\Http\Controllers\API\Settings\DepartmentController;
 use App\Http\Controllers\API\Settings\GpaController;
@@ -15,6 +13,24 @@ use App\Http\Controllers\API\Settings\SubjectController;
 use App\Http\Controllers\API\Settings\PermissionController;
 use App\Http\Controllers\API\Settings\RoleController;
 use App\Http\Controllers\API\Settings\SessionController;
+use App\Http\Controllers\API\Settings\ClassHasDepartmentController;
+use App\Http\Controllers\API\Settings\ClassHasSubjectsController;
+use App\Http\Controllers\API\Settings\ReligionController;
+use App\Http\Controllers\API\Settings\SchoolClassController;
+
+use App\Http\Controllers\API\Students\StudentController;
+use App\Http\Controllers\API\Students\StudentAssignmentController;
+use App\Http\Controllers\API\Students\StudentPaymentInfoController;
+use App\Http\Controllers\API\Students\StudentsAttendanceController;
+
+use App\Http\Controllers\API\Employee\EmployeeController;
+use App\Http\Controllers\API\Employee\EmployeeAttendanceController;
+use App\Http\Controllers\API\Employee\EmployeePostController;
+
+use App\Http\Controllers\API\Exams\ExamController;
+use App\Http\Controllers\API\Exams\MarksController;
+
+use App\Http\Controllers\API\Results\ResultController;
 
 /*
 |--------------------------------------------------------------------------
@@ -74,5 +90,53 @@ Route::middleware("auth:sanctum")->group(function () {
 
         Route::get('assign_department', [ClassHasDepartmentController::class, "index"]);
         Route::post('assign_department', [ClassHasDepartmentController::class, "assign"]);
+    });
+
+
+    Route::prefix('students')->group(function () {
+
+        Route::resource('student', StudentController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
+
+        Route::resource('student_assignment', StudentAssignmentController::class)->only([
+            'index', 'store', 'destroy'
+        ]);
+
+        Route::resource('assign_fees', StudentPaymentInfoController::class)->only([
+            'index', 'store', 'destroy'
+        ]);
+        Route::resource('student_attendance', StudentsAttendanceController::class)->only([
+            'index', 'store', 'destroy'
+        ]);
+    });
+
+
+    Route::prefix('employees')->group(function () {
+
+        Route::resource('employee', EmployeeController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
+        Route::resource('employee_attendance', EmployeeAttendanceController::class)->only([
+            'index', 'store', 'destroy'
+        ]);
+        Route::resource('employee_post', EmployeePostController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
+    });
+    Route::prefix('exams')->group(function () {
+
+        Route::resource('exam', ExamController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
+        Route::resource('marks', MarksController::class)->only([
+            'index', 'store', 'destroy'
+        ]);
+    });
+    Route::prefix('results')->group(function () {
+
+        Route::resource('result', ResultController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
     });
 });

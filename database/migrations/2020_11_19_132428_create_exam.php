@@ -18,11 +18,13 @@ class CreateExam extends Migration
             $table->string("exam_name");
             $table->unsignedBigInteger('class_id');
             $table->unsignedBigInteger('department_id');
-            $table->json("exam_subjects");
+            $table->unsignedBigInteger('session_id');
+            $table->json('subjects');
 
 
             $table->foreign("class_id")->references("id")->on("class")->onDelete('cascade');
             $table->foreign("department_id")->references("id")->on("department")->onDelete('cascade');
+            $table->foreign("session_id")->references("id")->on("session")->onDelete('cascade');
         });
     }
 

@@ -14,7 +14,7 @@ class CreateClassHasDepartment extends Migration
     public function up()
     {
         Schema::create('class_has_department', function (Blueprint $table) {
-
+            $table->id();
             $table->unsignedBigInteger("class_id");
             $table->unsignedBigInteger("session_id");
             $table->unsignedBigInteger("department_id");

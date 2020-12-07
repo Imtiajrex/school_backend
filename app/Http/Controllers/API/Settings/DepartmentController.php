@@ -28,22 +28,15 @@ class DepartmentController extends Controller
         $user = $request->user();
         if ($user->can($permission)) {
             $request->validate([
-                "session_id" => 'required|numeric',
                 "name" => "required|string"
             ]);
-            if (Department::where(["session_id" => $request->session_id, "name" => $request->name])->first() == null) {
+            if (Department::where(["name" => $request->name])->first() == null) {
                 $department = new Department;
-                if (Session::find($request->session_id)) {
-                    $department->session_id = $request->session_id;
-                    $department->class_id = $request->class_id;
-                    $department->name = $request->name;
-                    if ($department->save()) {
-                        return ResponseMessage::success("Department Created!");
-                    } else {
-                        return ResponseMessage::fail("Department Creation Failed!");
-                    }
+                $department->name = $request->name;
+                if ($department->save()) {
+                    return ResponseMessage::success("Department Created!");
                 } else {
-                    return ResponseMessage::fail("Session does not exist!");
+                    return ResponseMessage::fail("Department Creation Failed!");
                 }
             } else {
                 return ResponseMessage::fail("Department Exists!");
@@ -59,22 +52,15 @@ class DepartmentController extends Controller
         $user = $request->user();
         if ($user->can($permission)) {
             $request->validate([
-                "session_id" => 'required|numeric',
                 "name" => "required|string"
             ]);
             $department = Department::find($id);
             if ($department != null) {
-                if (Session::find($request->session_id)) {
-                    $department->session_id = $request->session_id;
-                    $department->class_id = $request->class_id;
-                    $department->name = $request->name;
-                    if ($department->save()) {
-                        return ResponseMessage::success("Department Updated!");
-                    } else {
-                        return ResponseMessage::fail("Couldn't Update Department!");
-                    }
+                $department->name = $request->name;
+                if ($department->save()) {
+                    return ResponseMessage::success("Department Updated!");
                 } else {
-                    return ResponseMessage::fail("Session does not exist!");
+                    return ResponseMessage::fail("Couldn't Update Department!");
                 }
             } else {
                 return ResponseMessage::fail("Department Doesn't Exist!");

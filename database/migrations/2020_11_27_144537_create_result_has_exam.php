@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMarks extends Migration
+class CreateResultHasExam extends Migration
 {
     /**
      * Run the migrations.
@@ -13,15 +13,14 @@ class CreateMarks extends Migration
      */
     public function up()
     {
-        Schema::create('marks', function (Blueprint $table) {
+        Schema::create('result_has_exam', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger("student_id");
+            $table->unsignedBigInteger("result_id");
             $table->unsignedBigInteger("exam_id");
-            $table->json("marks");
+            $table->float("exam_percentage");
 
-
-            $table->foreign("student_id")->references("id")->on("students")->onDelete('cascade');
-            $table->foreign("exam_id")->references("id")->on("exam")->onDelete('cascade');
+            $table->foreign("result_id")->references('id')->on("results");
+            $table->foreign("exam_id")->references('id')->on("exam");
         });
     }
 
@@ -32,6 +31,6 @@ class CreateMarks extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('marks');
+        Schema::dropIfExists('result_has_exam');
     }
 }

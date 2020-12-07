@@ -9,4 +9,5 @@ class StudentsPaymentInfo extends Model
 {
     use HasFactory;
     protected $table = "students_payment_info";
+    public $timestamps = false;
 }

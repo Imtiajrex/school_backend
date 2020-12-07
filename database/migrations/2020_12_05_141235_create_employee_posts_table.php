@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateSessionHasStudents extends Migration
+class CreateEmployeePostsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,9 @@ class CreateSessionHasStudents extends Migration
      */
     public function up()
     {
-        Schema::create('session_has_students', function (Blueprint $table) {
-            $table->foreignId("session_id")->references("id")->on("students_base_info");
-            $table->foreignId("student_id")->references("id")->on("session");
+        Schema::create('employee_posts', function (Blueprint $table) {
+            $table->id();
+            $table->string("employee_post");
         });
     }
 
@@ -26,6 +26,6 @@ class CreateSessionHasStudents extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('session_has_students');
+        Schema::dropIfExists('employee_posts');
     }
 }

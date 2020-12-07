@@ -9,4 +9,5 @@ class Marks extends Model
 {
     use HasFactory;
     protected $table = "marks";
+    public $timestamps = false;
 }

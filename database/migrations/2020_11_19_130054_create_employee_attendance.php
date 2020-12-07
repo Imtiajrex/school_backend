@@ -16,13 +16,11 @@ class CreateEmployeeAttendance extends Migration
         Schema::create('employee_attendance', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger("employee_id");
-            $table->string("in_time");
-            $table->string("out_time");
-            $table->string("attendance_status");
+            $table->time("access_time");
             $table->date("date");
 
 
-            $table->foreign("employee_id")->references("id")->on("employee_base_info")->onDelete('cascade');
+            $table->foreign("employee_id")->references("id")->on("employee")->onDelete('cascade');
         });
     }
 

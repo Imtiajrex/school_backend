@@ -14,6 +14,7 @@ class CreateClassHasStudents extends Migration
     public function up()
     {
         Schema::create('class_has_students', function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger("class_id");
             $table->unsignedBigInteger("department_id");
             $table->unsignedBigInteger("session_id");
@@ -23,7 +24,7 @@ class CreateClassHasStudents extends Migration
             $table->foreign("class_id")->references("id")->on("class")->onDelete("cascade");
             $table->foreign("department_id")->references("id")->on("department")->onDelete("cascade");
             $table->foreign("session_id")->references("id")->on("session")->onDelete("cascade");
-            $table->foreign("student_id")->references("id")->on("students_base_info")->onDelete("cascade");
+            $table->foreign("student_id")->references("id")->on("students")->onDelete("cascade");
         });
     }
 

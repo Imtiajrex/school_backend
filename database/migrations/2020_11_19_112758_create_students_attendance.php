@@ -16,12 +16,10 @@ class CreateStudentsAttendance extends Migration
         Schema::create('students_attendance', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger("student_id");
-            $table->string("in_time");
-            $table->string("out_time");
-            $table->string("attendance_status");
+            $table->time("access_time");
             $table->date("date");
 
-            $table->foreign("student_id")->references("id")->on("students_base_info")->onDelete('cascade');
+            $table->foreign("student_id")->references("id")->on("students")->onDelete('cascade');
         });
     }
 

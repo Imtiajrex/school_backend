@@ -5,8 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class StudentsBaseInfo extends Model
+class EmployeePost extends Model
 {
     use HasFactory;
-    protected $table = "students_base_info";
+    public $table = "employee_posts";
+    public $timestamps = false;
 }
