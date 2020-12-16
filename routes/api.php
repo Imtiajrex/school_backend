@@ -1,6 +1,6 @@
 <?php
 
-
+use App\Http\Controllers\API\Accounts\AccountsController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\API\Settings\UserController;
@@ -31,6 +31,9 @@ use App\Http\Controllers\API\Exams\ExamController;
 use App\Http\Controllers\API\Exams\MarksController;
 
 use App\Http\Controllers\API\Results\ResultController;
+
+use App\Http\Controllers\API\Payments\StudentsPaymentController;
+use App\Http\Controllers\API\Payments\StudentsPaymentReceiptController;
 
 /*
 |--------------------------------------------------------------------------
@@ -137,6 +140,22 @@ Route::middleware("auth:sanctum")->group(function () {
 
         Route::resource('result', ResultController::class)->only([
             'index', 'store', 'update', 'destroy'
+        ]);
+        Route::get("result_has_exams", [ResultController::class, "getResultExams"]);
+    });
+    Route::prefix('accounts')->group(function () {
+
+        Route::resource('/account', AccountsController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
+    });
+    Route::prefix('payments')->group(function () {
+
+        Route::resource('/student_payment', StudentsPaymentController::class)->only([
+            'index', 'store', 'destroy'
+        ]);
+        Route::resource('/student_payment_receipt', StudentsPaymentReceiptController::class)->only([
+            'index', 'store', 'destroy'
         ]);
     });
 });

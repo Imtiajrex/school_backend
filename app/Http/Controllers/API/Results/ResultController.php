@@ -23,11 +23,27 @@ class ResultController extends Controller
         $user = $request->user();
         $permission = "View Result";
         if ($user->can($permission)) {
+            if ($request->class_id != null && $request->department_id != null && $request->session_id != null)
+                return Results::where(["class_id" => $request->class_id, "department_id" => $request->department_id, "session_id" => $request->session_id])->get();
+            if ($request->session_id != null)
+                return Results::where("session_id", $request->session_id)->get();
+            if ($request->class_id != null)
+                return Results::where("class_id", $request->class_id)->get();
+            return Results::all();
+        } else {
+            return ResponseMessage::unauthorized($permission);
+        }
+    }
+
+    public function getResultExams(Request $request)
+    {
+        $user = $request->user();
+        $permission = "View Result Exams";
+        if ($user->can($permission)) {
             $request->validate([
                 "result_id" => "required|numeric"
             ]);
-
-            return Results::find($request->result_id);
+            return ResultHasExam::where("result_id", $request->result_id)->get();
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -98,17 +114,17 @@ class ResultController extends Controller
     public function destroy($id, Request $request)
     {
         $user = $request->user();
-        $permission = "Delete Marks";
+        $permission = "Delete Result";
         if ($user->can($permission)) {
-            $exam = Marks::find($id);
-            if ($exam != null) {
-                if ($exam->delete()) {
-                    return ResponseMessage::success("Mark Deleted!");
+            $result = Results::find($id);
+            if ($result != null) {
+                if ($result->delete()) {
+                    return ResponseMessage::success("Result Deleted!");
                 } else {
-                    return ResponseMessage::fail("Couldn't Delete Mark!");
+                    return ResponseMessage::fail("Couldn't Delete Result!");
                 }
             } else {
-                return ResponseMessage::fail("Mark Doesn't Exist!");
+                return ResponseMessage::fail("Result Doesn't Exist!");
             }
         } else {
             ResponseMessage::unauthorized($permission);
