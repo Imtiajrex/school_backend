@@ -16,7 +16,7 @@ class CreateStudentsPayment extends Migration
         Schema::create('students_payment', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger("student_id");
-            $table->int("group_id");
+            $table->integer("group_id");
             $table->unsignedBigInteger("payment_category_id");
             $table->string("payment_info");
             $table->float("payment_amount");

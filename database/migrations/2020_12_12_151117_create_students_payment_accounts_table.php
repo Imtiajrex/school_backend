@@ -21,7 +21,7 @@ class CreateStudentsPaymentAccountsTable extends Migration
             $table->enum("status", ["DUE", "PAID"]);
 
             $table->foreign("student_id")->references("id")->on("students")->onDelete("cascade");
-            $table->foreign("payment_id")->references("id")->on("payment_id")->onDelete("cascade");
+            $table->foreign("payment_id")->references("id")->on("students_payment")->onDelete("cascade");
         });
     }
 
