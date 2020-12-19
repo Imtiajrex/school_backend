@@ -18,11 +18,17 @@ class CreateBooksSold extends Migration
             $table->unsignedBigInteger('book_id');
             $table->integer("quantity");
             $table->float("price");
-            $table->float("paid_amount");
-            $table->string("buyer_info");
+            $table->string("buyer_type");
+            $table->unsignedBigInteger('buyer_id');
+            $table->unsignedBigInteger('payment_id');
+            $table->date('date');
 
 
             $table->foreign("book_id")->references("id")->on("books")->onDelete('cascade');
+            $table->foreign("payment_id")->references("id")->on("payment")->onDelete('cascade');
+
+            $table->index('buyer_id');
+            $table->index('date');
         });
     }
 

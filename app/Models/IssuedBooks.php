@@ -9,4 +9,5 @@ class IssuedBooks extends Model
 {
     use HasFactory;
     protected $table = "issued_books";
+    public $timestamps = false;
 }

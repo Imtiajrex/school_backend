@@ -21,7 +21,7 @@ class CreateBooks extends Migration
             $table->string("shelf_no");
             $table->float("price");
             $table->integer("stock");
-            $table->boolean("deleted");
+            $table->boolean("deleted")->default(0);
         });
     }
 

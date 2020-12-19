@@ -9,7 +9,7 @@ use Intervention\Image\ImageManagerStatic as Image;
 
 class FileUploader extends Controller
 {
-    public static function upload($image, $resize_width)
+    public static function upload($image, $resize_width = null)
     {
         $highest_file_size = 5;
         $supported_file_types = ["image/jpeg", "image/png"];

@@ -17,7 +17,7 @@ class CreateStudentsPayment extends Migration
             $table->id();
             $table->unsignedBigInteger("student_id");
             $table->integer("group_id");
-            $table->unsignedBigInteger("payment_category_id");
+            $table->string("payment_category");
             $table->string("payment_info");
             $table->float("payment_amount");
             $table->float("paid_amount");
@@ -26,9 +26,8 @@ class CreateStudentsPayment extends Migration
             $table->timestamp("updated_at")->nullable();
 
             $table->foreign("student_id")->references("id")->on("students")->onDelete('cascade');
-            $table->foreign("payment_category_id")->references("id")->on("payment_category")->onDelete('cascade');
 
-            $table->index(["group_id", "date", "created_at", "updated_at"]);
+            $table->index(["group_id", "date", "created_at", "updated_at", "payment_category_id"]);
         });
     }
 

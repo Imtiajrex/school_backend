@@ -17,10 +17,10 @@ class CreateGallery extends Migration
             $table->id();
             $table->string("image_name");
             $table->string("caption");
-            $table->unsignedBigInteger('parent_album_id');
+            $table->unsignedBigInteger('parent_album_id')->nullable();
 
 
-            $table->foreign("parent_album_id")->references("id")->on("album")->onDelete('cascade');
+            $table->foreign("parent_album_id")->references("id")->on("album")->onDelete('null');
         });
     }
 

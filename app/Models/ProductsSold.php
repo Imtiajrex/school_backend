@@ -9,4 +9,5 @@ class ProductsSold extends Model
 {
     use HasFactory;
     protected $table = "products_sold";
+    public $timestamps = false;
 }

@@ -180,8 +180,11 @@ class StudentController extends Controller
         if ($user->can($permission)) {
             $students = Students::find($id);
             if ($students != null) {
+                $student_image = $students->student_image;
                 if (User::where(["username" => $students->student_id])->delete()) {
                     if ($students->delete()) {
+                        if ($student_image != "default.jpg")
+                            Storage::delete("public/images/" . $student_image);
                         return ResponseMessage::success("Student Deleted!");
                     } else {
                         return ResponseMessage::fail("Couldn't Delete Student!");

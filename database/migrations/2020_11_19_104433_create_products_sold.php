@@ -18,10 +18,14 @@ class CreateProductsSold extends Migration
             $table->unsignedBigInteger('product_id');
             $table->integer("quantity");
             $table->float("price");
-            $table->float("paid_amount");
-            $table->string("buyer_info");
+            $table->unsignedBigInteger('payment_id');
+            $table->string("buyer_type");
+            $table->unsignedBigInteger('buyer_id');
+            $table->date('date');
 
             $table->foreign("product_id")->references("id")->on("products")->onDelete('cascade');
+            $table->foreign("payment_id")->references("id")->on("payment")->onDelete('cascade');
+            $table->index(["buyer_type", "buyer_id", "date"]);
         });
     }
 

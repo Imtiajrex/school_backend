@@ -17,13 +17,16 @@ class CreateIssuedBooks extends Migration
             $table->id();
             $table->unsignedBigInteger('book_id');
             $table->string("book_issuer_type");
-            $table->string("book_issuer_id");
+            $table->unsignedBigInteger("book_issued_to_id");
             $table->date("book_issued_date");
-            $table->date("book_returned_date");
+            $table->date("book_return_date");
+            $table->date("returned_at")->nullable();
             $table->string("issue_status");
 
 
             $table->foreign("book_id")->references("id")->on("books")->onDelete('cascade');
+            $table->index("book_issued_to");
+            $table->index("issue_status");
         });
     }
 

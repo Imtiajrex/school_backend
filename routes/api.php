@@ -30,10 +30,19 @@ use App\Http\Controllers\API\Employee\EmployeePostController;
 use App\Http\Controllers\API\Exams\ExamController;
 use App\Http\Controllers\API\Exams\MarksController;
 
+use App\Http\Controllers\API\Library\BooksController;
+use App\Http\Controllers\API\Library\IssuedBooksController;
+use App\Http\Controllers\API\Library\SellBooksController;
+
+
+use App\Http\Controllers\API\Products\ProductsController;
+use App\Http\Controllers\API\Products\SellProductsController;
+
 use App\Http\Controllers\API\Results\ResultController;
 
 use App\Http\Controllers\API\Payments\StudentsPaymentController;
 use App\Http\Controllers\API\Payments\StudentsPaymentReceiptController;
+use App\Http\Controllers\API\WebsiteSettings\GalleryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -155,6 +164,34 @@ Route::middleware("auth:sanctum")->group(function () {
             'index', 'store', 'destroy'
         ]);
         Route::resource('/student_payment_receipt', StudentsPaymentReceiptController::class)->only([
+            'index', 'store', 'destroy'
+        ]);
+    });
+
+    Route::prefix('library')->group(function () {
+
+        Route::resource('/books', BooksController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
+        Route::resource('/issue_books', IssuedBooksController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
+        Route::resource('/sell_books', SellBooksController::class)->only([
+            'index', 'store', 'destroy'
+        ]);
+    });
+    Route::prefix('products')->group(function () {
+
+        Route::resource('/product', ProductsController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
+        Route::resource('/sell_products', SellProductsController::class)->only([
+            'index', 'store', 'destroy'
+        ]);
+    });
+    Route::prefix('website_settings')->group(function () {
+
+        Route::resource('/gallery', GalleryController::class)->only([
             'index', 'store', 'destroy'
         ]);
     });
