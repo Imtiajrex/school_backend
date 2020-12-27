@@ -141,12 +141,15 @@ class UserController extends Controller
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'username' => ['The provided credentials are incorrect.'],
+                'err' => ['The provided credentials are incorrect.'],
             ]);
         }
 
+        $user_type = $user->user_type;
+        $user_role = $user->getRoleNames();
         $token = $user->createToken($request->device_name)->plainTextToken;
-        return $token;
+        $user_permissions = $user->getAllPermissions();
+        return response()->json(["token" => $token, "user_type" => $user_type, "role" => $user_role, "permissions" => $user_permissions]);
     }
 
     public function logout(Request $request)

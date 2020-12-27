@@ -42,6 +42,8 @@ use App\Http\Controllers\API\Results\ResultController;
 
 use App\Http\Controllers\API\Payments\StudentsPaymentController;
 use App\Http\Controllers\API\Payments\StudentsPaymentReceiptController;
+
+use App\Http\Controllers\API\WebsiteSettings\AlbumController;
 use App\Http\Controllers\API\WebsiteSettings\GalleryController;
 
 /*
@@ -194,5 +196,9 @@ Route::middleware("auth:sanctum")->group(function () {
         Route::resource('/gallery', GalleryController::class)->only([
             'index', 'store', 'destroy'
         ]);
+        Route::resource('/albums', AlbumController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
+        Route::post('/assign_album', [AlbumController::class, "assignAlbum"]);
     });
 });
