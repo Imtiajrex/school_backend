@@ -24,8 +24,7 @@ class CreateProductsSold extends Migration
             $table->date('date');
 
             $table->foreign("product_id")->references("id")->on("products")->onDelete('cascade');
-            $table->foreign("payment_id")->references("id")->on("payment")->onDelete('cascade');
-            $table->index(["buyer_type", "buyer_id", "date"]);
+            $table->index(["buyer_type", "buyer_id", "date","payment_id"]);
         });
     }
 

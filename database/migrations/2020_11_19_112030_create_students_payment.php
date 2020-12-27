@@ -27,7 +27,11 @@ class CreateStudentsPayment extends Migration
 
             $table->foreign("student_id")->references("id")->on("students")->onDelete('cascade');
 
-            $table->index(["group_id", "date", "created_at", "updated_at", "payment_category_id"]);
+            $table->index("group_id");
+            $table->index("payment_category");
+            $table->index("date");
+            $table->index("created_at");
+            $table->index("updated_at");
         });
     }
 

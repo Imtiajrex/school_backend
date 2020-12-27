@@ -25,7 +25,7 @@ class CreateIssuedBooks extends Migration
 
 
             $table->foreign("book_id")->references("id")->on("books")->onDelete('cascade');
-            $table->index("book_issued_to");
+            $table->index("book_issued_to_id");
             $table->index("issue_status");
         });
     }

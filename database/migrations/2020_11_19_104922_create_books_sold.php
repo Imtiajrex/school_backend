@@ -25,8 +25,8 @@ class CreateBooksSold extends Migration
 
 
             $table->foreign("book_id")->references("id")->on("books")->onDelete('cascade');
-            $table->foreign("payment_id")->references("id")->on("payment")->onDelete('cascade');
 
+            $table->index('payment_id');
             $table->index('buyer_id');
             $table->index('date');
         });

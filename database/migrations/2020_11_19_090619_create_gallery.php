@@ -20,7 +20,7 @@ class CreateGallery extends Migration
             $table->unsignedBigInteger('parent_album_id')->nullable();
 
 
-            $table->foreign("parent_album_id")->references("id")->on("album")->onDelete('null');
+            $table->foreign("parent_album_id")->references("id")->on("album")->onDelete('set null');
         });
     }
 
