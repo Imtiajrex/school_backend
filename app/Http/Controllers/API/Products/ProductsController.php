@@ -14,7 +14,7 @@ class ProductsController extends Controller
         $user = $request->user();
         $permission = "View Products";
         if ($user->can($permission)) {
-            return Products::all();
+            return Products::where('deleted',0)->get();
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -88,7 +88,8 @@ class ProductsController extends Controller
         if ($user->can($permission)) {
             $products = Products::find($id);
             if ($products != null) {
-                if ($products->deleted = 1 && $products->save()) {
+                $products->deleted = 1; 
+                if ($products->save()) {
                     return ResponseMessage::success("Products Deleted!");
                 } else {
                     return ResponseMessage::fail("Couldn't Delete Products!");

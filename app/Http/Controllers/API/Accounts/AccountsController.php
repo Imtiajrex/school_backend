@@ -14,13 +14,20 @@ class AccountsController extends Controller
         $permission = "View Accounts";
         $user = $request->user();
         if ($user->can($permission)) {
-            $request->validate([
-                "from" => "required|date",
-                "to" => "required|date"
-            ]);
-            $from = $request->from;
-            $to = $request->to;
-            return Accounts::whereBetween("date", [$from, $to])->get();
+            $entry_type_array = ["Credit","Debit"];
+            if($request->from != null && $request->to != null){
+                $from = $request->from;
+                $to = $request->to;
+                $acc = Accounts::whereBetween("date", [$from, $to])->get();
+            }else{
+                $acc = Accounts::orderBy("id","desc")->limit(15)->get();
+            }
+            foreach($acc as $account){
+                if($account->entry_type!==-1)
+                $account->entry_type = $entry_type_array[$account->entry_type];
+            }
+            return $acc;
+            
         } else {
             ResponseMessage::unauthorized($permission);
         }

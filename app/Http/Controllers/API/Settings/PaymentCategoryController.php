@@ -26,10 +26,10 @@ class PaymentCategoryController extends Controller
         $user = $request->user();
         if ($user->can($permission)) {
             $request->validate([
-                "category_name" => 'required',
+                "category_name" => 'required|string',
                 "info_type" => 'required',
                 "info_options" => "required",
-                "default_amount" => 'required',
+                "default_amount" => 'required|numeric',
                 "recurring_type" => "required"
             ]);
             if (PaymentCategory::where(["category_name" => $request->category_name])->first() == null) {

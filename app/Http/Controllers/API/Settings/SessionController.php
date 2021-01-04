@@ -26,7 +26,7 @@ class SessionController extends Controller
         $permission = "Create Session";
         if ($user->can($permission)) {
             $request->validate([
-                "session" => "required"
+                "session" => "required|numeric"
             ]);
             $session = new Session;
             $session->session = $request->session;

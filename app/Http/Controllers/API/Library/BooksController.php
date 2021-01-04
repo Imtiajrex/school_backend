@@ -14,7 +14,7 @@ class BooksController extends Controller
         $user = $request->user();
         $permission = "View Books";
         if ($user->can($permission)) {
-            return Books::all();
+            return Books::where("deleted",0)->get();
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -96,7 +96,8 @@ class BooksController extends Controller
         if ($user->can($permission)) {
             $books = Books::find($id);
             if ($books != null) {
-                if ($books->deleted = 1 && $books->save()) {
+                $books->deleted = 1;
+                if ($books->save()) {
                     return ResponseMessage::success("Books Deleted!");
                 } else {
                     return ResponseMessage::fail("Couldn't Delete Books!");

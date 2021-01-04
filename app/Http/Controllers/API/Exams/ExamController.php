@@ -11,6 +11,7 @@ use App\Models\SchoolClass;
 use App\Models\Session;
 use App\Models\Subjects;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ExamController extends Controller
 {
@@ -65,7 +66,7 @@ class ExamController extends Controller
                     return ResponseMessage::fail("Some Subjects Don't Exist!");
             }
 
-            $exam->exam_subjects = json_encode($subjects);
+            $exam->subjects = json_encode($subjects);
 
             if (SchoolClass::find($request->class_id) == null)
                 return ResponseMessage::fail("Class Doesn't Exist!");
@@ -100,19 +101,20 @@ class ExamController extends Controller
             if ($exam != null) {
                 $exam->exam_name = $request->exam_name;
                 $subjects = json_decode($request->subjects);
-                $prev_subject = json_decode($exam->exam_subjects);
+                $prev_subject = json_decode($exam->subjects);
                 foreach ($subjects as $subject) {
                     if (Subjects::find($subject) == null)
                         return ResponseMessage::fail("Some Subjects Don't Exist!");
                 }
-                $toDelete = array_diff($prev_subject, $subjects);
+                $toDelete = [];//array_diff($prev_subject, $subjects);
 
-                $exam->exam_subjects = $subjects;
+                $exam->subjects = $subjects;
 
 
                 if ($exam->save()) {
+                    echo count($toDelete);
                     if (count($toDelete) > 0) {
-                        Marks::whereIn("subject_id", [$toDelete])->where("exam_id", $id)->delete();
+                        DB::table('marks')->whereIn("subject_id", $toDelete)->where("exam_id", $id)->delete();
                     }
                     return ResponseMessage::success("Exam Updated Successfully!");
                 } else {

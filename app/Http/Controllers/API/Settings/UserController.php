@@ -16,7 +16,7 @@ class UserController extends Controller
     {
         $request_user = $request->user();
         if ($request_user->can('View User')) {
-            return User::all();
+            return User::all(['name','username','user_type']);
         } else {
             return ResponseMessage::unauthorized("Unauthorized!");
         }
