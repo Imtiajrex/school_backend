@@ -17,11 +17,13 @@ class CreateMarks extends Migration
             $table->id();
             $table->unsignedBigInteger("student_id");
             $table->unsignedBigInteger("exam_id");
+            $table->unsignedBigInteger("subject_id");
             $table->json("marks");
 
 
             $table->foreign("student_id")->references("id")->on("students")->onDelete('cascade');
             $table->foreign("exam_id")->references("id")->on("exam")->onDelete('cascade');
+            $table->foreign("subject_id")->references("id")->on("subjects")->onDelete('cascade');
         });
     }
 
