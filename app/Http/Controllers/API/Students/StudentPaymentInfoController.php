@@ -16,11 +16,27 @@ class StudentPaymentInfoController extends Controller
         $user = $request->user();
         $permission = "View Student Payment Info";
         if ($user->can($permission)) {
+            $name = "";
+            if ($request->std_id) {
+                $student = Students::where("student_id", $request->std_id)->first();
+                if ($student != null) {
+                    $student_id = $student->id;
+                    $name = $student->student_name;
+                } else
+                    return [];
+            } else if ($request->student_id) {
+                $student_id = $request->student_id;
+            }
 
-            $request->validate([
-                "student_id" => "required|numeric"
-            ]);
-            return StudentsPaymentInfo::where("student_id", $request->student_id)->get();
+
+            $std_pay_info =  StudentsPaymentInfo::where("student_id", $student_id)->get();
+            foreach ($std_pay_info as $spi) {
+                $spi["std_id"] = $request->std_id;
+                $spi["student_name"] = $name;
+                $payment_category = PaymentCategory::find($spi->student_payment_category);
+                $spi["payment_category"] = $payment_category->category_name;
+            }
+            return $std_pay_info;
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -32,20 +48,21 @@ class StudentPaymentInfoController extends Controller
         $permission = "Assign Student Payment Info";
         if ($user->can($permission)) {
             $request->validate([
-                "student_id" => "required|numeric",
+                "student_id" => "required",
                 "payment_category_id" => "required|numeric",
                 "student_default_fees" => "required|numeric"
             ]);
 
 
-
-            if (Students::find($request->student_id) == null)
+            $student = Students::where("student_id", $request->student_id)->first();
+            if ($student == null)
                 return ResponseMessage::fail("Student Doesn't Exist!");
+            $student_id = $student->id;
 
             if (PaymentCategory::find($request->payment_category_id) == null)
                 return ResponseMessage::fail("Payment Category Doesn't Exist!");
 
-            $_payment_set = StudentsPaymentInfo::where(["student_id" => $request->student_id, "payment_category_id" => $request->payment_category_id])->first();
+            $_payment_set = StudentsPaymentInfo::where(["student_id" => $student_id, "student_payment_category" => $request->payment_category_id])->first();
             if ($_payment_set != null) {
                 $payment_set = $_payment_set;
             } else if ($request->id != null) {
@@ -54,8 +71,8 @@ class StudentPaymentInfoController extends Controller
                 $payment_set = new StudentsPaymentInfo;
             }
 
-            $payment_set->student_id = $request->student_id;
-            $payment_set->payment_category_id = $request->payment_category_id;
+            $payment_set->student_id = $student_id;
+            $payment_set->student_payment_category = $request->payment_category_id;
             $payment_set->student_default_fees = $request->student_default_fees;
             if ($payment_set->save()) {
                 return ResponseMessage::success("Payment Info Assigned!");
@@ -84,7 +101,7 @@ class StudentPaymentInfoController extends Controller
                 "payment_category_id" => "required|numeric",
             ]);
 
-            $payment_set = StudentsPaymentInfo::where(["student_id" => $request->student_id, "payment_category_id" => $request->payment_category_id])->first();
+            $payment_set = StudentsPaymentInfo::where(["student_id" => $request->student_id, "student_payment_category" => $request->payment_category_id])->first();
 
             if ($payment_set == null)
                 return ResponseMessage::fail("Payment Set Doesn't Exist!");

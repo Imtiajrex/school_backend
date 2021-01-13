@@ -22,7 +22,30 @@ class StudentController extends Controller
         $user = $request->user();
         $permission = "View Students";
         if ($user->can($permission)) {
-            return Students::all();
+            $query = [];
+            if ($request->religion != null && $request->religion != -1) {
+                $query["religion"] = $request->religion;
+            }
+
+            if ($request->gender != null && $request->gender != -1) {
+                $query["gender"] = $request->gender;
+            }
+
+            if ($request->age != null && $request->age != "") {
+                $query["age"] = $request->age;
+            }
+
+            $students = [];
+            if ($request->student_id != null && strlen($request->student_id) > 0) {
+                $students = Students::where("student_id", "like", ($request->student_id) . "%")->get();
+            } else if (count($query) > 0) {
+                $students = Students::where($query)->get();
+            }
+
+            foreach ($students as $student) {
+                $student['extended_info'] = json_decode($student["extended_info"]);
+            }
+            return $students;
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -41,16 +64,15 @@ class StudentController extends Controller
                 "primary_phone" => "required",
                 "class_id" => "required|numeric",
                 "department_id" => "required|numeric",
-                "session_id" => "required|numeric"
+                "session_id" => "required|numeric",
+                "role" => "required|numeric",
             ]);
 
-
             $current_year = date('Y') - 2000;
-            $total_students = Students::all()->count();
+            $total_students = Students::where("student_id", "like", "STD" . $current_year . "%")->count();
+            $total_students = Students::where("student_id", "like", "STD" . $current_year . "%")->where("student_id", "like", "%" . $total_students + 1)->count();
+
             $student_id = ($current_year * 10000) + $total_students + 1;
-            while (Students::find($student_id) != null) {
-                $student_id++;
-            }
             $student_id = "STD" . $student_id;
 
             $students = new Students;
@@ -62,15 +84,17 @@ class StudentController extends Controller
             $students->age = $request->age;
             $students->primary_phone = $request->primary_phone;
 
-
-            if ($request->student_email != null)
+            if ($request->student_email != null) {
                 $students->student_email = $request->student_email;
+            }
 
-            if ($request->secondary_phone != null)
+            if ($request->secondary_phone != null) {
                 $students->secondary_phone = $request->secondary_phone;
+            }
 
-            if ($request->extended_info != null)
-                $students->extended_info = $request->extended_info;
+            if ($request->extended_info != null) {
+                $students->extended_info = json_encode($request->extended_info);
+            }
 
             $students->enrollment_status = 'student';
 
@@ -86,9 +110,8 @@ class StudentController extends Controller
             }
             $students->student_image = $student_image;
 
-
             if ($students->save()) {
-                $class_assigned = $this->assignClass($request->session_id, $request->class_id, $request->department_id, $students->id);
+                $class_assigned = $this->assignClass($request->session_id, $request->class_id, $request->department_id, $students->id, $request->role);
                 if (!array_key_exists('error', $class_assigned)) {
                     if ($this->createUserAccount($student_id, $request->student_name)) {
                         return ResponseMessage::success("Student Created Successfully!");
@@ -97,13 +120,17 @@ class StudentController extends Controller
                     }
                 } else {
                     Students::destroy($students->id);
-                    if ($student_image != "default.jpg")
+                    if ($student_image != "default.jpg") {
                         Storage::delete("public/images/" . $student_image);
+                    }
+
                     return ResponseMessage::fail($class_assigned["error"]);
                 }
             } else {
-                if ($student_image != "default.jpg")
+                if ($student_image != "default.jpg") {
                     Storage::delete("public/images/" . $student_image);
+                }
+
                 return ResponseMessage::fail("Couldn't Create Student!");
             }
         } else {
@@ -117,13 +144,13 @@ class StudentController extends Controller
         $permission = "Update Students";
         if ($user->can($permission)) {
             $request->validate([
-                "student_name" => "required",
-                "gender" => "required",
-                "religion" => "required",
-                "age" => "required",
+                "student_name" => "required|string",
+                "gender" => "required|string",
+                "religion" => "required|string",
+                "age" => "required|numeric",
                 "primary_phone" => "required",
-                "extended_info" => "required|json",
-                "enrollment_status" => "required|string"
+                "extended_info" => "required",
+                "enrollment_status" => "required|string",
             ]);
             $students = Students::find($id);
             if ($students != null) {
@@ -160,14 +187,18 @@ class StudentController extends Controller
                 }
 
                 if ($students->save()) {
-                    if ($prev_image != $students->student_image && $prev_image != 'default.jpg')
+                    if ($prev_image != $students->student_image && $prev_image != 'default.jpg') {
                         Storage::delete("public/images/" . $prev_image);
+                    }
+
                     return ResponseMessage::success("Student Updated Successfully!");
                 } else {
                     return ResponseMessage::fail("Couldn't Update Student!");
                 }
-            } else
+            } else {
                 return ResponseMessage::fail("Student Doesn't Exist!");
+            }
+
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -181,16 +212,15 @@ class StudentController extends Controller
             $students = Students::find($id);
             if ($students != null) {
                 $student_image = $students->student_image;
-                if (User::where(["username" => $students->student_id])->delete()) {
-                    if ($students->delete()) {
-                        if ($student_image != "default.jpg")
-                            Storage::delete("public/images/" . $student_image);
-                        return ResponseMessage::success("Student Deleted!");
-                    } else {
-                        return ResponseMessage::fail("Couldn't Delete Student!");
+                User::where(["username" => $students->student_id])->delete();
+                if ($students->delete()) {
+                    if ($student_image != "default.jpg") {
+                        Storage::delete("public/images/" . $student_image);
                     }
+
+                    return ResponseMessage::success("Student Deleted!");
                 } else {
-                    return ResponseMessage::fail("Couldn't Delete Student User Account!");
+                    return ResponseMessage::fail("Couldn't Delete Student!");
                 }
             } else {
                 return ResponseMessage::fail("Student Doesn't Exist!");
@@ -209,11 +239,13 @@ class StudentController extends Controller
         $user->user_type = "student";
         if ($user->save()) {
             return true;
-        } else
+        } else {
             return false;
+        }
+
     }
 
-    public function assignClass($session_id, $class_id, $department_id, $student_id)
+    public function assignClass($session_id, $class_id, $department_id, $student_id, $role)
     {
         if (Session::find($session_id) != null) {
             if (SchoolClass::find($class_id) != null) {
@@ -223,10 +255,13 @@ class StudentController extends Controller
                     $assign_student->class_id = $class_id;
                     $assign_student->department_id = $department_id;
                     $assign_student->student_id = $student_id;
-                    if ($assign_student->save())
+                    $assign_student->role = $role;
+                    if ($assign_student->save()) {
                         return ["success" => true];
-                    else
+                    } else {
                         return ["error" => "Couldn't Assign Class"];
+                    }
+
                 } else {
                     return ["error" => "Department Doesn't Exist"];
                 }

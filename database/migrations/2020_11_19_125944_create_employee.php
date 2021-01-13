@@ -27,7 +27,7 @@ class CreateEmployee extends Migration
             $table->string("employee_secondary_phone", 25)->default('');
             $table->string("employee_email")->default('');
             $table->string("job_status");
-            $table->json("employee_extended_info")->default('[]');
+            $table->json("employee_extended_info")->default('{}');
 
             $table->unique("employee_id");
         });

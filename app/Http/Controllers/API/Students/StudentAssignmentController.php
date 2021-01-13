@@ -19,7 +19,27 @@ class StudentAssignmentController extends Controller
         $user = $request->user();
         $permission = "View ClassHasStudents";
         if ($user->can($permission)) {
-            return ClassHasStudents::all();
+            $query = [];
+            if ($request->session_id) {
+                $query["class_has_students.session_id"] = $request->session_id;
+
+                if ($request->class_id) {
+                    $query["class_has_students.class_id"] = $request->class_id;
+
+                    if ($request->department_id) {
+                        $query["class_has_students.department_id"] = $request->department_id;
+                    }
+                }
+            }
+
+            if ($request->student_id) {
+                $student_id = Students::where("student_id", $request->student_id)->first();
+                if ($student_id)
+                    $query = ["class_has_students.student_id" => $student_id->id];
+            }
+
+            if (count($query) != 0)
+                return ClassHasStudents::where($query)->leftJoin("class", "class_has_students.class_id", "=", "class.id")->leftJoin("session", "class_has_students.session_id", "=", "session.id")->leftJoin("department", "class_has_students.department_id", "=", "department.id")->leftJoin("students", "class_has_students.student_id", "=", "students.id")->orderBy("class","desc")->orderBy("department","desc")->orderBy("role","asc")->get(["class_has_students.*", "class.name as class", "session.*", "department.name as department", "students.student_name", "students.student_id as student_identifier"]);
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -34,13 +54,16 @@ class StudentAssignmentController extends Controller
                 "class_id" => "required|numeric",
                 "department_id" => "required|numeric",
                 "session_id" => "required|numeric",
-                "student_id" => "required|numeric",
+                "student_id" => "required|string",
+                "role" => "required|numeric",
             ]);
 
             $session_id = $request->session_id;
             $class_id = $request->class_id;
             $department_id = $request->department_id;
             $student_id = $request->student_id;
+            $role = $request->role;
+
 
             if (SchoolClass::find($class_id) == null)
                 return ResponseMessage::fail("Class Doesn't Exist!");
@@ -50,18 +73,14 @@ class StudentAssignmentController extends Controller
 
             if (Session::find($session_id) == null)
                 return ResponseMessage::fail("Session Doesn't Exist!");
-
-            if (Students::find($student_id) == null)
+            $student = Students::where("student_id", $student_id)->first();
+            if ($student == null)
                 return ResponseMessage::fail("Student Doesn't Exist!");
-
+            $student_id = $student->id;
             $ClassHasStudents = ClassHasStudents::where(["session_id" => $session_id, "class_id" => $class_id, "department_id" => $department_id, "student_id" => $student_id])->first();
 
             if ($ClassHasStudents != null)
                 return ResponseMessage::success("This Student is Already Assigned In This Class!");
-
-            $ClassHasStudents = ClassHasStudents::where(["session_id" => $session_id, "student_id" => $student_id])->first();
-            if ($ClassHasStudents != null)
-                return ResponseMessage::success("Already Been Assigned In This Session! Remove from the assigned class first!");
 
             $assigned_student = new ClassHasStudents;
 
@@ -69,6 +88,7 @@ class StudentAssignmentController extends Controller
             $assigned_student->department_id = $department_id;
             $assigned_student->session_id = $session_id;
             $assigned_student->student_id = $student_id;
+            $assigned_student->role = $role;
 
             if ($assigned_student->save()) {
                 return ResponseMessage::success("Student Assigned Successfully!");
@@ -81,24 +101,14 @@ class StudentAssignmentController extends Controller
     }
 
 
-    public function destroy(Request $request)
+    public function destroy($id,Request $request)
     {
         $user = $request->user();
         $permission = "Delete ClassHasStudents";
         if ($user->can($permission)) {
-            $request->validate([
-                "class_id" => "required|numeric",
-                "department_id" => "required|numeric",
-                "session_id" => "required|numeric",
-                "student_id" => "required|numeric",
-            ]);
+            
 
-            $session_id = $request->session_id;
-            $class_id = $request->class_id;
-            $department_id = $request->department_id;
-            $student_id = $request->student_id;
-
-            $ClassHasStudents = ClassHasStudents::where(["session_id" => $session_id, "class_id" => $class_id, "department_id" => $department_id, "student_id" => $student_id])->first();
+            $ClassHasStudents = ClassHasStudents::find($id);
 
             if ($ClassHasStudents != null) {
                 if ($ClassHasStudents->delete()) {

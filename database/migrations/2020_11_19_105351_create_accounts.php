@@ -15,10 +15,15 @@ class CreateAccounts extends Migration
     {
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
-            $table->boolean("entry_type");
+            $table->string("balance_form");
+            $table->string("entry_type");
             $table->date("date");
-            $table->string("entry_info");
+            $table->string("entry_info")->nullable();
             $table->float("amount");
+
+            $table->index("balance_form");
+            $table->index("entry_type");
+            $table->index("date");
         });
     }
 

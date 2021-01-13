@@ -84,12 +84,19 @@ class ResultController extends Controller
                 $exams = json_decode($request->exams);
                 $result_has_exams = [];
                 foreach ($exams as $exam) {
-                    $exam_query = Exam::find($exam->exam_id);
-                    if ($exam_query == null) {
-                        if ($exam_query->class_id != $request->class_id && $exam_query->department_id != $request->department_id && $exam_query->session_id != $request->session_id)
-                            return ResponseMessage::fail("Some Exams Don't Exist!");
+                    if(is_object($exam)){
+                        if($exam->exam_id == null || $exam->exam_percentage == null)
+                            return ResponseMessage::fail("Not Valid Exam Data");
+                        $exam_query = Exam::find($exam->exam_id);
+                        if ($exam_query == null) {
+                            if ($exam_query->class_id != $request->class_id && $exam_query->department_id != $request->department_id && $exam_query->session_id != $request->session_id)
+                                return ResponseMessage::fail("Some Exams Don't Exist!");
+                        }
+                        array_push($result_has_exams, ["result_id" => $result->id, "exam_id" => $exam->exam_id, "exam_percentage" => $exam->exam_percentage]);
                     }
-                    array_push($result_has_exams, ["result_id" => $result->id, "exam_id" => $exam->exam_id, "exam_percentage" => $exam->exam_percentage]);
+                    else 
+                        return ResponseMessage::fail("Not Valid Exam Data");
+                    
                 }
 
                 $students = ClassHasStudents::select('student_id')->where(["class_id" => $request->class_id, "department_id" => $request->department_id])->get();

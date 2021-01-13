@@ -25,7 +25,7 @@ class CreateStudents extends Migration
             $table->string("secondary_phone")->default('');
             $table->string("student_email")->default('');
             $table->string("enrollment_status");
-            $table->json("extended_info")->default('[]');
+            $table->json("extended_info")->default('{}');
 
             $table->unique("student_id");
         });

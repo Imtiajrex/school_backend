@@ -16,6 +16,11 @@ class CreateDepartmentTable extends Migration
         Schema::create('department', function (Blueprint $table) {
             $table->id();
             $table->string("name");
+            $table->unsignedBigInteger("class_id");
+            $table->unsignedBigInteger("department_id");
+
+            $table->foreign("class_id")->references("id")->on("class")->onDelete("cascade");
+            $table->foreign("session_id")->references("id")->on("session")->onDelete("cascade");
         });
     }
 

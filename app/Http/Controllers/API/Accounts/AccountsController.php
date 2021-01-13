@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseMessage;
 use App\Models\Accounts;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AccountsController extends Controller
 {
@@ -14,20 +15,14 @@ class AccountsController extends Controller
         $permission = "View Accounts";
         $user = $request->user();
         if ($user->can($permission)) {
-            $entry_type_array = ["Credit","Debit"];
-            if($request->from != null && $request->to != null){
+            if ($request->from != null && $request->to != null) {
                 $from = $request->from;
                 $to = $request->to;
-                $acc = Accounts::whereBetween("date", [$from, $to])->get();
-            }else{
-                $acc = Accounts::orderBy("id","desc")->limit(15)->get();
-            }
-            foreach($acc as $account){
-                if($account->entry_type!==-1)
-                $account->entry_type = $entry_type_array[$account->entry_type];
+                $acc = Accounts::whereBetween("date", [$from, $to])->orderBy("date", "desc")->orderBy("entry_type", "asc")->get();
+            } else {
+                $acc = Accounts::orderBy("id", "desc")->limit(15)->get();
             }
             return $acc;
-            
         } else {
             ResponseMessage::unauthorized($permission);
         }
@@ -40,16 +35,28 @@ class AccountsController extends Controller
         if ($user->can($permission)) {
             $request->validate([
                 "date" => "required|date",
-                "entry_type" => "required|numeric",
-                "entry_info" => "required|string",
+                "balance_form" => "required|string",
+                "entry_type" => "required|string",
                 "amount" => "required|numeric",
             ]);
             $Accounts = new Accounts;
             $Accounts->date = $request->date;
+            $Accounts->balance_form = $request->balance_form;
             $Accounts->entry_type = $request->entry_type;
-            $Accounts->entry_info = $request->entry_info;
+            if ($request->entry_info)
+                $Accounts->entry_info = $request->entry_info;
             $Accounts->amount = $request->amount;
+
+            $account_balance = DB::table("account_balance")->where("id", 1)->get();
+            $balance = $request->balance_form == "Bank" ? $account_balance[0]->bank : $account_balance[0]->cash;
+
+            $new_balance = $request->entry_type == "Credit" ? $balance + $request->amount : $balance - $request->amount;
+
+            $update_query = [];
+            $update_query[strtolower($request->balance_form)] = $new_balance;
             if ($Accounts->save()) {
+                DB::table("account_balance")->where("id", 1)->update($update_query);
+
                 return ResponseMessage::success("Inserted A Accounts Record!");
             } else {
                 return ResponseMessage::fail("Accounts Record Insertion Failed!");
@@ -66,17 +73,30 @@ class AccountsController extends Controller
         if ($user->can($permission)) {
             $request->validate([
                 "date" => "required|date",
-                "entry_type" => "required|numeric",
-                "entry_info" => "required|string",
+                "balance_form" => "required|string",
+                "entry_type" => "required|string",
                 "amount" => "required|numeric",
             ]);
             $Accounts = Accounts::find($id);
             if ($Accounts != null) {
+                $account_balance = DB::table("account_balance")->where("id", 1)->get();
+                $balance = $request->balance_form == "Bank" ? $account_balance[0]->bank : $account_balance[0]->cash;
+                $changed_balance = $Accounts->entry_type == "Credit" ? $balance - $Accounts->amount : $balance + $Accounts->amount;
+
                 $Accounts->date = $request->date;
+                $Accounts->balance_form = $request->balance_form;
                 $Accounts->entry_type = $request->entry_type;
-                $Accounts->entry_info = $request->entry_info;
+                if ($request->entry_info)
+                    $Accounts->entry_info = $request->entry_info;
                 $Accounts->amount = $request->amount;
+
+                $new_balance = $request->entry_type == "Credit" ? $changed_balance + $request->amount : $changed_balance - $request->amount;
+
+                $update_query = [];
+                $update_query[strtolower($request->balance_form)] = $new_balance;
+
                 if ($Accounts->save()) {
+                    DB::table("account_balance")->where("id", 1)->update($update_query);
                     return ResponseMessage::success("Accounts Record Updated!");
                 } else {
                     return ResponseMessage::fail("Couldn't Update Accounts Record!");
@@ -100,6 +120,45 @@ class AccountsController extends Controller
                 }
             } else {
                 return ResponseMessage::fail("Accounts Record Doesn't Exist!");
+            }
+        } else {
+            ResponseMessage::unauthorized($permission);
+        }
+    }
+
+    public function getAccountBalance(Request $request)
+    {
+
+        $permission = "View Account Balance";
+        $user = $request->user();
+        if ($user->can($permission)) {
+            $acc = DB::table("account_balance")->get();
+            return $acc;
+        } else {
+            ResponseMessage::unauthorized($permission);
+        }
+    }
+
+    public function editAccountBalance($id, Request $request)
+    {
+
+        $permission = "Edit Account Balance";
+        $user = $request->user();
+        if ($user->can($permission)) {
+            $request->validate([
+                "cash" => "required|numeric",
+                "bank" => "required|numeric",
+            ]);
+            $acc = DB::table("account_balance")->find($id);
+
+            if ($acc != null) {
+                if (DB::table("account_balance")->where("id", $id)->update(["cash" => $request->cash, "bank" => $request->bank])) {
+                    return ResponseMessage::success("Accounts Balance Record Updated!");
+                } else {
+                    return ResponseMessage::fail("Couldn't Update Accounts Balance Record!");
+                }
+            } else {
+                return ResponseMessage::fail("Accounts Balance Record Doesn't Exist!");
             }
         } else {
             ResponseMessage::unauthorized($permission);

@@ -16,7 +16,19 @@ class RoleController extends Controller
         $permission = "View Role";
         $user = $request->user();
         if ($user->can($permission)) {
-            return Role::all();
+            $roles = Role::all();
+            foreach($roles as $role){
+                $permissions_db =  DB::table("role_has_permissions")->where('role_id',$role->id)->get();
+                $permission_names = [];
+                $permissions = [];
+                foreach($permissions_db as $permission){
+                    array_push($permission_names,Permission::find($permission->permission_id)->name);
+                    array_push($permissions,$permission->permission_id);
+                }
+                $role["permission_names"] = implode(', ',$permission_names);
+                $role["permissions"] = json_encode($permissions);
+            }
+            return $roles;
         } else {
             ResponseMessage::unauthorized($permission);
         }
@@ -64,6 +76,7 @@ class RoleController extends Controller
                 "name" => "required|string",
                 "permissions" => "required|json"
             ]);
+            if($request->name == "Super Admin") return ResponseMessage::fail("Can't Do Anything On Super Admin!");
             $role = Role::find($id);
             if ($role != null) {
                 $role->name = $request->name;
@@ -90,7 +103,9 @@ class RoleController extends Controller
         $permission = "Delete Role";
         $user = $request->user();
         if ($user->can($permission)) {
-            if (Role::find($id) != null) {
+            $role= Role::find($id);
+            if ($role != null) {
+                if($role->name == "Super Admin") return ResponseMessage::fail("Can't Do Anything On Super Admin!");
                 if (Role::destroy($id)) {
                     return ResponseMessage::success("Role Deleted!");
                 } else {
@@ -114,8 +129,8 @@ class RoleController extends Controller
         $counter = 0;
         foreach ($permissions as $permission) {
             $counter++;
-            if (Permission::where("name", $permission->name)->first() != null) {
-                if ($role->givePermissionTo($permission->name)) {
+            if (Permission::find($permission) != null) {
+                if ($role->givePermissionTo($permission)) {
                     $success_counter++;
                 }
             } else {

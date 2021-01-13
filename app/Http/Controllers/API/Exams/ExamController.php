@@ -23,19 +23,33 @@ class ExamController extends Controller
             if ($request->exam_id != null)
                 return Exam::find($request->exam_id);
             $query = [];
-            if ($request->class_id != null) {
+            if ($request->class_id != null && $request->department_id != null && $request->session_id != null) {
                 $query["class_id"] = $request->class_id;
-            }
-            if ($request->department_id != null) {
                 $query["department_id"] = $request->department_id;
-            }
-            if ($request->session_id != null) {
                 $query["session_id"] = $request->session_id;
             }
-            if (count($query) > 0)
-                return Exam::where([[$query]])->get();
+            if (count($query) > 0) {
+                $exam_data = Exam::where([[$query]])->get();
+            } else {
+                $exam_data =  Exam::all();
+            }
 
-            return Exam::all();
+            foreach ($exam_data as $exm) {
+                $class = SchoolClass::find($exm->class_id);
+                $dept = Department::find($exm->department_id);
+                $sess = Session::find($exm->session_id);
+                $subject_names = [];
+                foreach(json_decode($exm->subjects) as $sub){
+                    array_push($subject_names,Subjects::find($sub)->subject_name);
+                }
+                $exm["subject_names"] = implode(", ",$subject_names);
+                if ($class !== null && $sess != null && $dept != null) {
+                    $exm["class"] = $class->name;
+                    $exm["department"] = $dept->name;
+                    $exm["session"] = $sess->session;
+                }
+            }
+            return $exam_data;
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -106,13 +120,12 @@ class ExamController extends Controller
                     if (Subjects::find($subject) == null)
                         return ResponseMessage::fail("Some Subjects Don't Exist!");
                 }
-                $toDelete = [];//array_diff($prev_subject, $subjects);
+                $toDelete = array_diff($prev_subject, $subjects);
 
                 $exam->subjects = $subjects;
 
 
                 if ($exam->save()) {
-                    echo count($toDelete);
                     if (count($toDelete) > 0) {
                         DB::table('marks')->whereIn("subject_id", $toDelete)->where("exam_id", $id)->delete();
                     }

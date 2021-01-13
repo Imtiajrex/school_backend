@@ -4,7 +4,6 @@ namespace App\Http\Controllers\API\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseMessage;
-use App\Models\Employee;
 use App\Models\EmployeePost;
 use Illuminate\Http\Request;
 
@@ -15,7 +14,7 @@ class EmployeePostController extends Controller
         $user = $request->user();
         $permission = "View Employee Post";
         if ($user->can($permission)) {
-            return EmployeePost::all();
+            return EmployeePost::leftJoin("employee_types", "employee_posts.employee_type_id", "=", "employee_types.id")->get(["employee_posts.*", "employee_types.employee_type"]);
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -27,12 +26,14 @@ class EmployeePostController extends Controller
         $permission = "Create Employee Post";
         if ($user->can($permission)) {
             $request->validate([
-                "employee_post" => "required",
+                "employee_post" => "required|string",
+                "employee_type_id" => "required|numeric",
             ]);
 
 
             $employee = new EmployeePost;
             $employee->employee_post = $request->employee_post;
+            $employee->employee_type_id = $request->employee_type_id;
 
             if ($employee->save()) {
                 return ResponseMessage::success("Employee Post Created Successfully!");
@@ -50,11 +51,15 @@ class EmployeePostController extends Controller
         $permission = "Update Employee Post";
         if ($user->can($permission)) {
             $request->validate([
-                "employee_post" => "required",
+                "employee_post" => "required|string",
+                "employee_type_id" => "required|numeric",
             ]);
+
+
             $employee = EmployeePost::find($id);
             if ($employee != null) {
                 $employee->employee_post = $request->employee_post;
+                $employee->employee_type_id = $request->employee_type_id;
 
                 if ($employee->save()) {
                     return ResponseMessage::success("Employee Post Updated Successfully!");

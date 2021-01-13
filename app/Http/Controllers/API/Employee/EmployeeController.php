@@ -19,7 +19,27 @@ class EmployeeController extends Controller
         $user = $request->user();
         $permission = "View Employee";
         if ($user->can($permission)) {
-            return Employee::all();
+            $query = [];
+            if ($request->religion != null && $request->religion != -1)
+                $query["employee_religion"] = $request->religion;
+            if ($request->gender != null && $request->gender != -1)
+                $query["employee_gender"] = $request->gender;
+            if ($request->age != null && $request->age != "")
+                $query["employee_age"] = $request->age;
+            if ($request->employee_type != null && $request->employee_type != -1)
+                $query["employee_type"] = $request->employee_type;
+
+            if ($request->employee_id != null && strlen($request->employee_id) > 0)
+                $employees = Employee::where("employee_id", "like", ($request->employee_id) . "%")->get();
+            else if (count($query) > 0)
+                $employees = Employee::where($query)->get();
+            else
+                $employees = Employee::all();
+
+            foreach ($employees as $employee) {
+                $employee['employee_extended_info'] = json_decode($employee["employee_extended_info"]);
+            }
+            return $employees;
         } else {
             return ResponseMessage::unauthorized($permission);
         }

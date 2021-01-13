@@ -16,7 +16,20 @@ class UserController extends Controller
     {
         $request_user = $request->user();
         if ($request_user->can('View User')) {
-            return User::all(['name','username','user_type']);
+            $users = [];
+            $query = [];
+            if ($request->user_type != null)
+                $query = ["user_type" => $request->user_type];
+            if (count($query) > 0)
+                $users = User::where($query)->get(['id', 'name', 'username', 'user_type']);
+            foreach ($users as $user) {
+                $user["role_name"] = $user->getRolenames();
+                $role=null;
+                if (count($user["role_name"]) > 0)
+                    $role = Role::where("name", $user["role_name"])->first();
+                $user["role"] = $role != null ? $role->id : '';
+            }
+            return $users;
         } else {
             return ResponseMessage::unauthorized("Unauthorized!");
         }
@@ -33,8 +46,7 @@ class UserController extends Controller
                 'name' => 'required',
                 'user_type' => 'required',
                 'username' => 'required',
-                'password' => 'required',
-                'role' => 'required'
+                'password' => 'required'
             ]);
             $role = $request->role;
 
@@ -51,6 +63,11 @@ class UserController extends Controller
 
 
             if ($user->save()) {
+                if ($request->role != null)
+                    $role = $request->role;
+                else
+                    return ResponseMessage::success("User Successfully Created!");
+
                 if (Role::where('name', $role)->first() != null) {
                     if ($user->assignRole($role)) {
                         return ResponseMessage::success($success_msg);
@@ -101,8 +118,7 @@ class UserController extends Controller
                 'name' => 'required',
                 'user_type' => 'required',
                 'username' => 'required',
-                'password' => 'required',
-                'role' => 'required'
+                'password' => 'required'
             ]);
             $user = User::find($id);
             if ($user != null) {
@@ -112,7 +128,11 @@ class UserController extends Controller
 
                 if ($user->save()) {
                     $this->removeAllRoles($user);
-                    $role = $request->role;
+                    if ($request->role != null)
+                        $role = $request->role;
+                    else
+                        return ResponseMessage::success("User Successfully Updated!");
+
                     if ($user->assignRole($role)) {
                         return ResponseMessage::success("User Successfully Updated!");
                     } else {

@@ -39,11 +39,11 @@ class StudentsPaymentController extends Controller
             $request->validate([
                 "date" => "required|date",
                 "student_id" => "required|numeric",
-                "payments" => "required|json"
+                "payments" => "required"
             ]);
             $date = $request->date;
             $student_id = $request->student_id;
-            $payments = json_decode($request->payments);
+            $payments = $request->payments;
 
 
 
@@ -124,17 +124,12 @@ class StudentsPaymentController extends Controller
     {
         $payment_arr = [];
         foreach ($payments as $payment) {
-            $payment_category_id = $payment->payment_category_id;
-            $payment_info = $payment->payment_info;
-            $payment_amount = $payment->payment_amount;
-            $paid_amount = $payment->paid_amount;
-
-            $payment_category = PaymentCategory::find($payment_category_id);
-            if ($payment_category == null)
-                return ResponseMessage::fail("Some Payment Categories Not Found!");
-
-
-            array_push($payment_arr, ["student_id" => $student_id, "date" => $date, "payment_category" => $payment_category->category_name, "payment_info" => $payment_info, "payment_amount" => $payment_amount, "paid_amount" => $paid_amount, "group_id" => $receipt_id]);
+            $payment_category = $payment["payment_category"];
+            $payment_info = $payment["payment_info"];
+            $payment_amount = $payment["payment_amount"];
+            $paid_amount = $payment["paid_amount"];
+            $payment_info = $payment_info==null?'':$payment_info;
+            array_push($payment_arr, ["student_id" => $student_id, "date" => $date, "payment_category" => $payment_category, "payment_info" => $payment_info, "payment_amount" => $payment_amount, "paid_amount" => $paid_amount, "group_id" => $receipt_id]);
         }
         return $payment_arr;
     }

@@ -13,7 +13,6 @@ use App\Http\Controllers\API\Settings\SubjectController;
 use App\Http\Controllers\API\Settings\PermissionController;
 use App\Http\Controllers\API\Settings\RoleController;
 use App\Http\Controllers\API\Settings\SessionController;
-use App\Http\Controllers\API\Settings\ClassHasDepartmentController;
 use App\Http\Controllers\API\Settings\ClassHasSubjectsController;
 use App\Http\Controllers\API\Settings\ReligionController;
 use App\Http\Controllers\API\Settings\SchoolClassController;
@@ -26,6 +25,7 @@ use App\Http\Controllers\API\Students\StudentsAttendanceController;
 use App\Http\Controllers\API\Employee\EmployeeController;
 use App\Http\Controllers\API\Employee\EmployeeAttendanceController;
 use App\Http\Controllers\API\Employee\EmployeePostController;
+use App\Http\Controllers\API\Employee\EmployeeTypeController;
 
 use App\Http\Controllers\API\Exams\ExamController;
 use App\Http\Controllers\API\Exams\MarksController;
@@ -42,7 +42,8 @@ use App\Http\Controllers\API\Results\ResultController;
 
 use App\Http\Controllers\API\Payments\StudentsPaymentController;
 use App\Http\Controllers\API\Payments\StudentsPaymentReceiptController;
-
+use App\Http\Controllers\API\Settings\StudentsExtendedInfoController;
+use App\Http\Controllers\API\Settings\TeachersExtendedInfoController;
 use App\Http\Controllers\API\WebsiteSettings\AlbumController;
 use App\Http\Controllers\API\WebsiteSettings\GalleryController;
 
@@ -101,9 +102,15 @@ Route::middleware("auth:sanctum")->group(function () {
 
         Route::get('assign_subject', [ClassHasSubjectsController::class, "index"]);
         Route::post('assign_subject', [ClassHasSubjectsController::class, "assign"]);
+        Route::delete('assign_subject/{subject_id}', [ClassHasSubjectsController::class, "destroy"]);
 
-        Route::get('assign_department', [ClassHasDepartmentController::class, "index"]);
-        Route::post('assign_department', [ClassHasDepartmentController::class, "assign"]);
+        Route::resource("students_extended_info",StudentsExtendedInfoController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
+        Route::resource("employees_extended_info",TeachersExtendedInfoController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
+
     });
 
 
@@ -137,6 +144,9 @@ Route::middleware("auth:sanctum")->group(function () {
         Route::resource('employee_post', EmployeePostController::class)->only([
             'index', 'store', 'update', 'destroy'
         ]);
+        Route::resource('employee_type', EmployeeTypeController::class)->only([
+            'index', 'store', 'update', 'destroy'
+        ]);
     });
     Route::prefix('exams')->group(function () {
 
@@ -159,6 +169,8 @@ Route::middleware("auth:sanctum")->group(function () {
         Route::resource('/account', AccountsController::class)->only([
             'index', 'store', 'update', 'destroy'
         ]);
+        Route::get("/account_balance",[AccountsController::class, "getAccountBalance"]);
+        Route::put("/account_balance/{id}",[AccountsController::class, "editAccountBalance"]);
     });
     Route::prefix('payments')->group(function () {
 

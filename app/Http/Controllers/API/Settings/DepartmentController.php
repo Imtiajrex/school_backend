@@ -16,7 +16,24 @@ class DepartmentController extends Controller
         $permission = "View Department";
         $user = $request->user();
         if ($user->can($permission)) {
-            return Department::all();
+            $query = [];
+            $depts=[];
+            if ($request->class_id != null && $request->session_id != null)
+                $query = ["class_id" => $request->class_id, "session_id" => $request->session_id];
+            if(count($query)>0)
+                $depts = Department::where($query)->get();
+            else
+                $depts = Department::all();
+
+            foreach ($depts as $dept) {
+                $class = SchoolClass::find($dept->class_id);
+                $session = Session::find($dept->session_id);
+                if ($class != null && $session != null) {
+                    $dept["class"] = $class->name;
+                    $dept["session"] = $session->session;
+                }
+            }
+            return $depts;
         } else {
             ResponseMessage::unauthorized($permission);
         }
@@ -28,11 +45,15 @@ class DepartmentController extends Controller
         $user = $request->user();
         if ($user->can($permission)) {
             $request->validate([
-                "name" => "required|string"
+                "name" => "required|string",
+                "class_id" => "required|numeric",
+                "session_id" => "required|numeric"
             ]);
             if (Department::where(["name" => $request->name])->first() == null) {
                 $department = new Department;
                 $department->name = $request->name;
+                $department->class_id = $request->class_id;
+                $department->session_id = $request->session_id;
                 if ($department->save()) {
                     return ResponseMessage::success("Department Created!");
                 } else {
@@ -57,6 +78,8 @@ class DepartmentController extends Controller
             $department = Department::find($id);
             if ($department != null) {
                 $department->name = $request->name;
+                $department->class_id = $request->class_id;
+                $department->session_id = $request->session_id;
                 if ($department->save()) {
                     return ResponseMessage::success("Department Updated!");
                 } else {

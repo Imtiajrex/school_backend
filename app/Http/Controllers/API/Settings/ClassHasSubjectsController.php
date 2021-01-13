@@ -19,7 +19,19 @@ class ClassHasSubjectsController extends Controller
         $permission = "View Assigned Subject";
         $user = $request->user();
         if ($user->can($permission)) {
-            return ClassHasSubjects::all();
+            $query = [];
+            $subjects=[];
+            if ($request->class_id != null && $request->department_id != null)
+                $query = ["class_id" => $request->class_id, "department_id" => $request->department_id];
+            if(count($query)>0)
+                $subjects = ClassHasSubjects::where($query)->get();
+            
+            foreach ($subjects as $subject) {
+                $subject["name"] = Subjects::find($subject->subject_id)->subject_name;
+                $subject["class"] = SchoolClass::find($subject->class_id)->name;
+                $subject["department"] = Department::find($subject->department_id)->name;
+            }
+            return $subjects;
         } else {
             ResponseMessage::unauthorized($permission);
         }
@@ -75,6 +87,18 @@ class ClassHasSubjectsController extends Controller
         } else {
             ClassHasSubjects::where(["class_id" => $class_id, "department_id" => $department_id])->delete();
             return false;
+        }
+    }
+    public function destroy($id, Request $request)
+    {
+
+        $permission = "Delete Assigned Subject";
+        $user = $request->user();
+        if ($user->can($permission)) {
+            if (ClassHasSubjects::destroy($id))
+                return ResponseMessage::success("Assigned Subject Deleted");
+            else
+                return ResponseMessage::fail("Couldn't Delte Assigned Subject");
         }
     }
 }

@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateEmployeePostsTable extends Migration
+class CreateEmployeeTypesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,9 @@ class CreateEmployeePostsTable extends Migration
      */
     public function up()
     {
-        Schema::create('employee_posts', function (Blueprint $table) {
+        Schema::create('employee_types', function (Blueprint $table) {
             $table->id();
-            $table->string("employee_post");
-            $table->unsignedBigInteger("employee_type_id");
-
-            $table->index("employee_type_id")->references("id")->on("employee_types")->onDelete("cascade");
+            $table->string("employee_type");
         });
     }
 

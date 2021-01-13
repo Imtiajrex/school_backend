@@ -14,7 +14,20 @@ class PaymentCategoryController extends Controller
         $permission = "View PaymentCategory";
         $user = $request->user();
         if ($user->can($permission)) {
-            return PaymentCategory::all();
+            $payment_category =  PaymentCategory::all();
+            if ($request->use) {
+                foreach ($payment_category as $p_cat) {
+                    if ($p_cat["info_type"] !== 'select')
+                        continue;
+                    $p_cat["info_options"] = explode(",", $p_cat["info_options"]);
+                    $options = [];
+                    foreach($p_cat["info_options"] as $option){
+                        array_push($options,["value"=>$option,"text"=>$option]);
+                    }
+                    $p_cat["info_options"] = $options;
+                }
+            }
+            return $payment_category;
         } else {
             ResponseMessage::unauthorized($permission);
         }
