@@ -17,7 +17,7 @@ class CreateStudentsPaymentAccountsTable extends Migration
             $table->id();
             $table->unsignedBigInteger("student_id");
             $table->unsignedBigInteger("payment_id");
-            $table->float("amount_difference");
+            $table->float("amount");
             $table->enum("status", ["DUE", "PAID"]);
 
             $table->foreign("student_id")->references("id")->on("students")->onDelete("cascade");

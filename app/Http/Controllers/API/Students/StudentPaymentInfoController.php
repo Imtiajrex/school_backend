@@ -96,18 +96,6 @@ class StudentPaymentInfoController extends Controller
                 }
             }
 
-            $request->validate([
-                "student_id" => "required|numeric",
-                "payment_category_id" => "required|numeric",
-            ]);
-
-            $payment_set = StudentsPaymentInfo::where(["student_id" => $request->student_id, "student_payment_category" => $request->payment_category_id])->first();
-
-            if ($payment_set == null)
-                return ResponseMessage::fail("Payment Set Doesn't Exist!");
-
-            if ($payment_set->delete())
-                return ResponseMessage::success("Payment Info Deleted!");
         } else {
             ResponseMessage::unauthorized($permission);
         }

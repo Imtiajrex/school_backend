@@ -37,12 +37,14 @@ class AccountsController extends Controller
                 "date" => "required|date",
                 "balance_form" => "required|string",
                 "entry_type" => "required|string",
+                "entry_category" => "required|string",
                 "amount" => "required|numeric",
             ]);
             $Accounts = new Accounts;
             $Accounts->date = $request->date;
             $Accounts->balance_form = $request->balance_form;
             $Accounts->entry_type = $request->entry_type;
+            $Accounts->entry_category = $request->entry_category;
             if ($request->entry_info)
                 $Accounts->entry_info = $request->entry_info;
             $Accounts->amount = $request->amount;
@@ -75,6 +77,7 @@ class AccountsController extends Controller
                 "date" => "required|date",
                 "balance_form" => "required|string",
                 "entry_type" => "required|string",
+                "entry_category" => "required|string",
                 "amount" => "required|numeric",
             ]);
             $Accounts = Accounts::find($id);
@@ -86,6 +89,7 @@ class AccountsController extends Controller
                 $Accounts->date = $request->date;
                 $Accounts->balance_form = $request->balance_form;
                 $Accounts->entry_type = $request->entry_type;
+                $Accounts->entry_category = $request->entry_category;
                 if ($request->entry_info)
                     $Accounts->entry_info = $request->entry_info;
                 $Accounts->amount = $request->amount;

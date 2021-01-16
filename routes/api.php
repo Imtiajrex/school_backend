@@ -33,8 +33,7 @@ use App\Http\Controllers\API\Exams\MarksController;
 use App\Http\Controllers\API\Library\BooksController;
 use App\Http\Controllers\API\Library\IssuedBooksController;
 use App\Http\Controllers\API\Library\SellBooksController;
-
-
+use App\Http\Controllers\API\Payments\DueController;
 use App\Http\Controllers\API\Products\ProductsController;
 use App\Http\Controllers\API\Products\SellProductsController;
 
@@ -175,11 +174,15 @@ Route::middleware("auth:sanctum")->group(function () {
     Route::prefix('payments')->group(function () {
 
         Route::resource('/student_payment', StudentsPaymentController::class)->only([
-            'index', 'store', 'destroy'
+            'index', 'store', 'update', 'destroy'
         ]);
         Route::resource('/student_payment_receipt', StudentsPaymentReceiptController::class)->only([
             'index', 'store', 'destroy'
         ]);
+        Route::resource('/student_due', DueController::class)->only([
+            'index','update', 'destroy'
+        ]);
+        Route::post('/student_due/pay', [DueController::class, "pay_due"]);
     });
 
     Route::prefix('library')->group(function () {
