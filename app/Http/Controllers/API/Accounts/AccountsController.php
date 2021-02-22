@@ -118,8 +118,14 @@ class AccountsController extends Controller
         $permission = "Delete Accounts Record";
         $user = $request->user();
         if ($user->can($permission)) {
-            if (Accounts::find($id) != null) {
-                if (Accounts::destroy($id)) {
+            $account = Accounts::find($id);
+            if ($account != null) {
+
+                $account_balance = DB::table("account_balance")->where("id", 1)->first();
+                $total_income = $account_balance->cash - $account->amount;
+                DB::table("account_balance")->where("id", 1)->update(["cash" => $total_income]);
+                if ($account->delete()) {
+
                     return ResponseMessage::success("Accounts Record Deleted!");
                 }
             } else {

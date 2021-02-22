@@ -18,20 +18,24 @@ class ClassHasSubjectsController extends Controller
     {
         $permission = "View Assigned Subject";
         $user = $request->user();
-        if ($user->can($permission)) {
+        if ($user->can($permission)||$user->user_type=="teacher") {
             $query = [];
-            $subjects=[];
+            $subjects = [];
             if ($request->class_id != null && $request->department_id != null)
-                $query = ["class_id" => $request->class_id, "department_id" => $request->department_id];
-            if(count($query)>0)
-                $subjects = ClassHasSubjects::where($query)->get();
-            
-            foreach ($subjects as $subject) {
-                $subject["name"] = Subjects::find($subject->subject_id)->subject_name;
-                $subject["class"] = SchoolClass::find($subject->class_id)->name;
-                $subject["department"] = Department::find($subject->department_id)->name;
+                $query = ["class_has_subjects.class_id" => $request->class_id, "class_has_subjects.department_id" => $request->department_id];
+            if (count($query) > 0) {
+                $subjects = ClassHasSubjects::where($query);
+                $subjects = $subjects->leftJoin("subjects", "subjects.id", '=', 'class_has_subjects.subject_id');
+                $subjects = $subjects->leftJoin("class", "class.id", '=', 'class_has_subjects.class_id');
+                $subjects = $subjects->leftJoin("department", "department.id", '=', 'class_has_subjects.department_id');
+                return $subjects->get(['class_has_subjects.*', 'subjects.subject_name as name', 'class.id as class_id', 'class.name as class', 'department.name as department', 'department.id as department_id']);
+            }else if($request->exam){
+                $subjects = new ClassHasSubjects;
+                $subjects = $subjects->leftJoin("subjects", "subjects.id", '=', 'class_has_subjects.subject_id');
+                $subjects = $subjects->leftJoin("class", "class.id", '=', 'class_has_subjects.class_id');
+                $subjects = $subjects->leftJoin("department", "department.id", '=', 'class_has_subjects.department_id');
+                return $subjects->get(['class_has_subjects.*','subjects.id', 'subjects.subject_name as name', 'class.id as class_id', 'class.name as class', 'department.name as department', 'department.id as department_id']);
             }
-            return $subjects;
         } else {
             ResponseMessage::unauthorized($permission);
         }

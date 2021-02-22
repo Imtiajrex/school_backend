@@ -19,8 +19,8 @@ class CreateResultHasExam extends Migration
             $table->unsignedBigInteger("exam_id");
             $table->float("exam_percentage");
 
-            $table->foreign("result_id")->references('id')->on("results");
-            $table->foreign("exam_id")->references('id')->on("exam");
+            $table->foreign("result_id")->references('id')->on("results")->onDelete('cascade');
+            $table->foreign("exam_id")->references('id')->on("exam")->onDelete('cascade');
         });
     }
 

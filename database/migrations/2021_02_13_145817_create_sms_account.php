@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateSubmenus extends Migration
+class CreateSmsAccount extends Migration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,11 @@ class CreateSubmenus extends Migration
      */
     public function up()
     {
-        Schema::create('submenus', function (Blueprint $table) {
+        Schema::create('sms_account', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('parent_menu_id');
-            $table->string('submenu_title');
-            $table->string('submenu_content');
-
-
-            $table->foreign("parent_menu_id")->references("id")->on("pages")->onDelete('cascade');
+            $table->float("balance");
+            $table->float("rate");
+            $table->integer("total_sent_sms");
         });
     }
 
@@ -31,6 +28,6 @@ class CreateSubmenus extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('submenus');
+        Schema::dropIfExists('sms_account');
     }
 }

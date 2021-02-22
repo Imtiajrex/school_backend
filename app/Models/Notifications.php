@@ -9,4 +9,7 @@ class Notifications extends Model
 {
     use HasFactory;
     protected $table = "notifications";
+    public $timestamps = false;
+    
+    protected $casts = ['content' => 'json'];
 }

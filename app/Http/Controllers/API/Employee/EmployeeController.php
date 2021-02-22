@@ -16,10 +16,27 @@ class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->home) {
+            if ($request->employee_type != null)
+                $query["employee_type"] = $request->employee_type;
+
+            if ($request->limit)
+                return Employee::where($query)->orderBy("id", "asc")->take(5)->get();
+            else
+                return Employee::where($query)->orderBy("id", "asc")->get();
+        }
+
         $user = $request->user();
         $permission = "View Employee";
         if ($user->can($permission)) {
             $query = [];
+            if ($request->options) {
+                $query["employee.job_status"] = "employee";
+                if ($request->employee_type) {
+                    $query["employee_type"] = $request->employee_type;
+                }
+                return Employee::where($query)->selectRaw('employee.id as value,concat(employee.employee_id, " ",employee.employee_name) as text')->get();
+            }
             if ($request->religion != null && $request->religion != -1)
                 $query["employee_religion"] = $request->religion;
             if ($request->gender != null && $request->gender != -1)
@@ -28,6 +45,7 @@ class EmployeeController extends Controller
                 $query["employee_age"] = $request->age;
             if ($request->employee_type != null && $request->employee_type != -1)
                 $query["employee_type"] = $request->employee_type;
+
 
             if ($request->employee_id != null && strlen($request->employee_id) > 0)
                 $employees = Employee::where("employee_id", "like", ($request->employee_id) . "%")->get();
@@ -52,6 +70,8 @@ class EmployeeController extends Controller
         if ($user->can($permission)) {
             $request->validate([
                 "employee_name" => "required",
+                "mother_name" => "required|string",
+                "father_name" => "required|string",
                 "employee_type" => "required",
                 "employee_post" => "required",
                 "employee_age" => "required",
@@ -75,6 +95,9 @@ class EmployeeController extends Controller
             $employee = new Employee;
             $employee->employee_id = $employee_id;
 
+            $employee->employee_name = $request->employee_name;
+            $employee->mother_name = $request->mother_name;
+            $employee->father_name = $request->father_name;
             $employee->employee_name = $request->employee_name;
             $employee->employee_type = $request->employee_type;
             $employee->employee_post = $request->employee_post;
@@ -109,11 +132,14 @@ class EmployeeController extends Controller
 
 
             if ($employee->save()) {
-                if (!($request->employee_type == "teacher") || $this->createUserAccount($employee->employee_id, $request->employee_name)) {
-                    return ResponseMessage::success("Employee Created Successfully!");
-                } else {
-                    return ResponseMessage::success("Employee Created! But No Employee User Account!");
+                if (($request->employee_type == "Teacher")) {
+                    if ($this->createUserAccount($employee->employee_id, $request->employee_name))
+                        return ResponseMessage::success("Employee Created Successfully!");
+                    else {
+                        return ResponseMessage::success("Employee Created! But No Employee User Account!");
+                    }
                 }
+                return ResponseMessage::success("Employee Created Successfully!");
             } else {
                 if ($employee_image != "default.jpg")
                     Storage::delete("public/images/" . $employee_image);
@@ -132,6 +158,8 @@ class EmployeeController extends Controller
             $request->validate([
                 "employee_name" => "required",
                 "employee_type" => "required",
+                "mother_name" => "required|string",
+                "father_name" => "required|string",
                 "employee_post" => "required",
                 "employee_age" => "required",
                 "employee_gender" => "required",
@@ -144,6 +172,8 @@ class EmployeeController extends Controller
                 if (EmployeePost::where("employee_post", $request->employee_post) == null)
                     return ResponseMessage::fail("Employee Post Doesn't Exist");
                 $employee->employee_name = $request->employee_name;
+                $employee->mother_name = $request->mother_name;
+                $employee->father_name = $request->father_name;
                 $employee->employee_type = $request->employee_type;
                 $employee->employee_post = $request->employee_post;
                 $employee->employee_age = $request->employee_age;
@@ -218,7 +248,7 @@ class EmployeeController extends Controller
         $user->username = $employee_id;
         $user->password = Hash::make($employee_id);
         $user->name = $employee_name;
-        $user->user_type = "Employee";
+        $user->user_type = "teacher";
         if ($user->save()) {
             return true;
         } else

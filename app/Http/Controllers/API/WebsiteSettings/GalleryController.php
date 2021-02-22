@@ -15,13 +15,10 @@ class GalleryController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-        $permission = "View Gallery";
-        if ($user->can($permission)) {
-            return Gallery::all();
-        } else {
-            return ResponseMessage::unauthorized($permission);
+        if($request->album_id){
+            return Gallery::where("parent_album_id",$request->album_id)->get();
         }
+        return Gallery::leftJoin("album", "album.id", "=", "gallery.parent_album_id")->get(["gallery.*", "album.album_name"]);
     }
 
     public function store(Request $request)
@@ -30,33 +27,60 @@ class GalleryController extends Controller
         $permission = "Upload Image";
         if ($user->can($permission)) {
             $request->validate([
-                "image" => "required|file",
+                "image" => "required",
             ]);
+            $files = $request->file('image');
+            $data = [];
+            $parent_album_id = -1;
+            if ($request->parent_album_id)
+                $parent_album_id = $request->parent_album_id;
+            $caption = null;
+            if ($request->caption)
+                $caption = $request->caption;
 
-            $image_entry = new Gallery;
 
-            $image_name = null;
-            $image_file = FileUploader::upload($request->image);
+            if ($request->hasFile('image')) {
+                foreach ($files as $file) {
+                    $image_file = FileUploader::upload($file);
 
-            if (array_key_exists('error', $image_file)) {
-                return ResponseMessage::fail($image_file["error"]);
-            } else if (array_key_exists('image_name', $image_file)) {
-                $image_name = $image_file["image_name"];
+                    if (array_key_exists('error', $image_file)) {
+                        return ResponseMessage::fail($image_file["error"]);
+                    } else if (array_key_exists('image_name', $image_file)) {
+                        $d = [];
+                        if ($parent_album_id != -1)
+                            $d["parent_album_id"] = $parent_album_id;
+                        if ($caption != null)
+                            $d["caption"] = $caption;
+                        $d["image_name"] = $image_file["image_name"];
+                        array_push($data, $d);
+                    }
+                }
             }
-
-            $image_entry->image_name = $image_name;
-
-
-            if ($request->caption != null)
-                $image_entry->caption = $request->caption;
-
-            if ($request->parent_album_id != null)
-                $image_entry->parent_album_id = $request->parent_album_id;
-
-            if ($image_entry->save()) {
+            if (Gallery::insert($data)) {
                 return ResponseMessage::success("Image Uploaded Successfully!");
             } else {
                 return ResponseMessage::fail("Couldn't Upload Image!");
+            }
+        } else {
+            return ResponseMessage::unauthorized($permission);
+        }
+    }
+    public function update(Request $request, $id)
+    {
+        $user = $request->user();
+        $permission = "Update Image";
+        if ($user->can($permission)) {
+            $image = Gallery::find($id);
+            if ($request->parent_album_id)
+                $image->parent_album_id = $request->parent_album_id;
+            if ($request->caption)
+                $image->caption = $request->caption;
+
+
+            if ($image->save()) {
+                return ResponseMessage::success("Image Updated Successfully!");
+            } else {
+                return ResponseMessage::fail("Couldn't Updated Image!");
             }
         } else {
             return ResponseMessage::unauthorized($permission);

@@ -17,6 +17,8 @@ class CreateEmployee extends Migration
             $table->id();
             $table->string("employee_id");
             $table->string("employee_name");
+            $table->string("mother_name");
+            $table->string("father_name");
             $table->string("employee_image")->default('');
             $table->string("employee_type");
             $table->string("employee_post");

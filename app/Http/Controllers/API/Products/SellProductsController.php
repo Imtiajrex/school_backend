@@ -8,6 +8,7 @@ use App\Models\Products;
 use App\Models\ProductsSold;
 use App\Models\Employee;
 use App\Models\PaymentCategory;
+use App\Models\PaymentRequest;
 use App\Models\Students;
 use App\Models\StudentsPayment;
 use App\Models\StudentsPaymentAccount;
@@ -41,54 +42,40 @@ class SellProductsController extends Controller
         $permission = "Sell Products";
         if ($user->can($permission)) {
             $request->validate([
-                "product_id" => "required|numeric",
-                "quantity" => "required|numeric",
-                "price" => "required|numeric",
-                "paid_amount" => "required|numeric",
-                "buyer_type" => "required|string",
-                "buyer_id" => "required|numeric",
+                "values" => "required",
+                "product_issuer_type" => "required",
+                "product_issued_to_id" => "required",
             ]);
 
+            $data = [];
+            $date = date("Y-m-d");
+            $payment_category = "Products";
+            $student_id = Students::where("student_id",$request->product_issued_to_id)->first();
 
-            $products_sold = new ProductsSold;
-            $products_sold->product_id = $request->product_id;
-            if (Products::find($request->product_id) == null)
-                return ResponseMessage::fail("Couldn't Find Products!");
-
-            $payment_id = -1;
-
-
-            $products_sold->quantity = $request->quantity;
-            $products_sold->price = $request->price;
-            $products_sold->buyer_type = $request->buyer_type;
-
-            if ($request->buyer_type == 'student') {
-                if (Students::find($request->buyer_id) == null)
-                    return ResponseMessage::fail("Couldn't Find ID!");
-
-                $date = date('Y-m-d');
-                $payment = $this->studentsPayment($request->price, $request->paid_amount, $request->buyer_id, $date);
-                if ($payment != false) {
-                    $payment_id = $payment;
-                } else {
-                    return "Failed To Add Students Payment!";
-                }
-            } else if ($request->buyer_type == 'employee') {
-                if (Employee::find($request->buyer_id) == null)
-                    return ResponseMessage::fail("Couldn't Find ID!");
-            } else if ($request->buyer_type == 'other') {
-                $request->buyer_id = 0;
-            } else {
-                return ResponseMessage::fail("Invalid Buyer Type!");
+            $student_id = $student_id->id;
+            $payment_info = "";
+            $payment_amount = 0;
+            foreach ($request->values as $v) {
+                array_push($data, ["buyer_type" => $request->product_issuer_type, "buyer_id" => $student_id, "date" => $date, "product_id" => $v["product_id"], "price" => $v["amount"], "quantity" => $v["quantity"]]);
+                $payment_info = $payment_info.$v["info"]." (x".$v["quantity"].")\n";
+                $payment_amount+=$v["amount"];
             }
-            $products_sold->buyer_id = $request->buyer_id;
 
-            $products_sold->payment_id = $payment_id;
-            $products_sold->date = $date;
-            if ($products_sold->save()) {
-                $product = Products::find($request->product_id);
-                $product->stock = $product->stock - $request->quantity;
-                $product->save();
+            $student_payment_request = new PaymentRequest();
+            $student_payment_request->student_id = $student_id;
+            $student_payment_request->payment_info = $payment_info;
+            $student_payment_request->payment_category = $payment_category;
+            $student_payment_request->payment_amount = $payment_amount;
+            $student_payment_request->date = $date;
+            $student_payment_request->save();
+            
+
+            if (ProductsSold::insert($data)) {
+                foreach ($request->values as $v) {
+                    $product = Products::find($v["product_id"]);
+                    $product->stock = $product->stock - $v["quantity"];
+                    $product->save();
+                }
                 return ResponseMessage::success("Products Sold Successfully!");
             } else {
                 return ResponseMessage::fail("Couldn't Sell Products!");
@@ -105,7 +92,6 @@ class SellProductsController extends Controller
         if ($user->can($permission)) {
             $products_sold = ProductsSold::find($id);
             if ($products_sold != null) {
-                StudentsPayment::destroy($products_sold->payment_id);
                 if ($products_sold->delete()) {
                     return ResponseMessage::success("Products Sold Record Deleted!");
                 } else {
@@ -119,29 +105,4 @@ class SellProductsController extends Controller
         }
     }
 
-    public function studentsPayment($price, $paid_amount, $student_id, $date)
-    {
-        $receipt_id = (int)microtime(true);
-
-        $payment = new StudentsPayment();
-        $payment->payment_category = "Others";
-        $payment->payment_info = "Products";
-        $payment->payment_amount = $price;
-        $payment->paid_amount = $paid_amount;
-
-        $payment->group_id = $receipt_id;
-        $payment->student_id = $student_id;
-        $payment->date = $date;
-
-
-        if ($payment->save()) {
-            if ($price >  $paid_amount)
-                StudentsPaymentAccount::insert(["amount_difference" => $price - $paid_amount, "student_id" => $student_id, "payment_id" => $payment->id, "status" => "DUE"]);
-
-            StudentsPaymentReceipt::insert(["id" => $receipt_id, "student_id" => $student_id, "payment_id" => $payment->id, 'date' => $date]);
-
-            return $payment->id;
-        } else
-            return false;
-    }
 }

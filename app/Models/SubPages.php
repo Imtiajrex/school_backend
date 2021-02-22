@@ -5,9 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class SubMenus extends Model
+class SubPages extends Model
 {
     use HasFactory;
-    protected $table = "submenus";
+    protected $casts = ['page_content' => 'json'];
+    protected $table = "subpages";
     public $timestamps = false;
 }

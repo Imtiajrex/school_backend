@@ -15,7 +15,7 @@ class StudentPaymentInfoController extends Controller
     {
         $user = $request->user();
         $permission = "View Student Payment Info";
-        if ($user->can($permission)) {
+        if ($user->can($permission)  || ($user->user_type =="student"&& $user->username==$request->student_id)) {
             $name = "";
             if ($request->std_id) {
                 $student = Students::where("student_id", $request->std_id)->first();

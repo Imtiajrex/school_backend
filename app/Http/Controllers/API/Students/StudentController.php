@@ -21,7 +21,7 @@ class StudentController extends Controller
     {
         $user = $request->user();
         $permission = "View Students";
-        if ($user->can($permission)) {
+        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_id)) {
             $query = [];
             if ($request->religion != null && $request->religion != -1) {
                 $query["religion"] = $request->religion;
@@ -37,7 +37,7 @@ class StudentController extends Controller
 
             $students = [];
             if ($request->student_id != null && strlen($request->student_id) > 0) {
-                $students = Students::where("student_id", "like", ($request->student_id) . "%")->get();
+                $students = Students::where("student_id", $request->student_id)->get();
             } else if (count($query) > 0) {
                 $students = Students::where($query)->get();
             }
@@ -57,7 +57,9 @@ class StudentController extends Controller
         $permission = "Create Students";
         if ($user->can($permission)) {
             $request->validate([
-                "student_name" => "required",
+                "father_name" => "required|string",
+                "mother_name" => "required|string",
+                "student_name" => "required|string",
                 "gender" => "required",
                 "religion" => "required",
                 "age" => "required",
@@ -71,14 +73,17 @@ class StudentController extends Controller
             $current_year = date('Y') - 2000;
             $total_students = Students::where("student_id", "like", "STD" . $current_year . "%")->count();
             $total_students = Students::where("student_id", "like", "STD" . $current_year . "%")->where("student_id", "like", "%" . $total_students + 1)->count();
-
             $student_id = ($current_year * 10000) + $total_students + 1;
-            $student_id = "STD" . $student_id;
+            while (Students::where("student_id", "STD".$student_id)->first() == null) {
+                $student_id++;
+            }
 
             $students = new Students;
-            $students->student_id = $student_id;
+            $students->student_id = "STD".$student_id;
 
             $students->student_name = $request->student_name;
+            $students->mother_name = $request->mother_name;
+            $students->father_name = $request->father_name;
             $students->gender = $request->gender;
             $students->religion = $request->religion;
             $students->age = $request->age;
@@ -145,6 +150,8 @@ class StudentController extends Controller
         if ($user->can($permission)) {
             $request->validate([
                 "student_name" => "required|string",
+                "mother_name" => "required|string",
+                "father_name" => "required|string",
                 "gender" => "required|string",
                 "religion" => "required|string",
                 "age" => "required|numeric",
@@ -155,6 +162,8 @@ class StudentController extends Controller
             $students = Students::find($id);
             if ($students != null) {
                 $students->student_name = $request->student_name;
+                $students->mother_name = $request->mother_name;
+                $students->father_name = $request->father_name;
                 $students->gender = $request->gender;
                 $students->religion = $request->religion;
                 $students->age = $request->age;
@@ -198,7 +207,6 @@ class StudentController extends Controller
             } else {
                 return ResponseMessage::fail("Student Doesn't Exist!");
             }
-
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -242,7 +250,6 @@ class StudentController extends Controller
         } else {
             return false;
         }
-
     }
 
     public function assignClass($session_id, $class_id, $department_id, $student_id, $role)
@@ -261,7 +268,6 @@ class StudentController extends Controller
                     } else {
                         return ["error" => "Couldn't Assign Class"];
                     }
-
                 } else {
                     return ["error" => "Department Doesn't Exist"];
                 }

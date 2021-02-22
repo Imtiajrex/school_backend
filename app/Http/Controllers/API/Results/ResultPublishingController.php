@@ -1,16 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\API\Exams;
+namespace App\Http\Controllers\API\Results;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseMessage;
-use App\Models\Department;
-use App\Models\Exam;
-use App\Models\Marks;
-use App\Models\Results;
-use App\Models\SchoolClass;
-use App\Models\Session;
-use App\Models\Students;
+use App\Models\StudentResultReport;
 use Illuminate\Http\Request;
 
 class ResultPublishingController extends Controller
@@ -18,13 +12,17 @@ class ResultPublishingController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $permission = "View Result";
+        $permission = "View Result Publication Status";
         if ($user->can($permission)) {
             $request->validate([
                 "result_id" => "required|numeric"
             ]);
 
-            return Results::find($request->result_id)->get();
+            $result =  StudentResultReport::where("result_id", $request->result_id);
+            $result = $result->leftJoin("results", "results.id", "=", "student_result_report.result_id");
+            $result = $result->leftJoin("students", "students.id", "=", "student_result_report.student_id");
+            $result = $result->selectRaw("student_result_report.*,students.student_name,students.student_id as student_identifier,results.result_name,(CASE WHEN student_result_report.result_status = 0 THEN 'Unpublished' ELSE 'Published' END) AS result_status");
+            return $result->get();
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -36,59 +34,18 @@ class ResultPublishingController extends Controller
         $permission = "Create Result";
         if ($user->can($permission)) {
             $request->validate([
-                "result_name" => "required|string",
-                "exams" => "required|json",
-                "class_id" => "required|numeric",
-                "department_id" => "required|numeric",
-                "session_id" => "required|numeric",
+                "ids" => "required",
             ]);
-
-            if (SchoolClass::find($request->class_id) == null)
-                return ResponseMessage::fail("Class Doesn't Exist!");
-
-            if (Department::find($request->department_id) == null)
-                return ResponseMessage::fail("Department Doesn't Exist!");
-
-            if (Session::find($request->session) == null)
-                return ResponseMessage::fail("Session Doesn't Exist!");
-
-            $result = new Results;
-            $result->result_name = $request->result_name;
-            $result->class_id = $request->class_id;
-            $result->department_id = $request->department_id;
-            $result->session_id = $request->session_id;
-
-            if ($result->save()) {
-                $exams = json_decode($request->exams);
-                foreach ($exams as $exam) {
-                    if (Exam::find($exam->exam_id) == null)
-                        return ResponseMessage::fail("Some Exams Don't Exist!");
-                }
-                return ResponseMessage::success("Marks Added!");
-            } else {
-                return ResponseMessage::fail("Failed To Add Marks!");
+            $value = 1;
+            $stat = "Published!";
+            if ($request->unpublish) {
+                $value = 0;
+                $stat = "Unpublished!";
             }
-        }
-    }
-
-
-    public function destroy($id, Request $request)
-    {
-        $user = $request->user();
-        $permission = "Delete Marks";
-        if ($user->can($permission)) {
-            $exam = Marks::find($id);
-            if ($exam != null) {
-                if ($exam->delete()) {
-                    return ResponseMessage::success("Mark Deleted!");
-                } else {
-                    return ResponseMessage::fail("Couldn't Delete Mark!");
-                }
-            } else {
-                return ResponseMessage::fail("Mark Doesn't Exist!");
-            }
-        } else {
-            ResponseMessage::unauthorized($permission);
+            if (StudentResultReport::whereIn('id', $request->ids)->update(["result_status" => $value]))
+                return ResponseMessage::success("Results " . $stat);
+            else
+                return ResponseMessage::success("Results Are Already " . $stat);
         }
     }
 }

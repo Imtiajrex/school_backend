@@ -12,13 +12,14 @@ class AlbumController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-        $permission = "View Album";
-        if ($user->can($permission)) {
-            return Album::all();
-        } else {
-            return ResponseMessage::unauthorized($permission);
+        if ($request->option) {
+            return Album::get(["album_name as text", "id as value"]);
+        }else if($request->home){
+            return Album::leftJoin('gallery',function($join){
+                $join->on("gallery.parent_album_id","=","album.id");
+            })->groupBy("gallery.parent_album_id")->get(["album.id","album_name","gallery.image_name"]);
         }
+        return Album::all();
     }
 
     public function store(Request $request)
@@ -91,29 +92,4 @@ class AlbumController extends Controller
         }
     }
 
-    public function assignAlbum(Request $request)
-    {
-        $user = $request->user();
-        $permission = "Assign Album";
-        if ($user->can($permission)) {
-            $request->validate([
-                "album_id" => "required|numeric",
-                "images" => "required|json"
-            ]);
-            $images = json_decode($request->images);
-
-            if (Album::find($request->album_id) == null)
-                return ResponseMessage::fail("Couldn't Find Album");
-
-            $image_entries = Gallery::whereIn("id", $images)->update(["parent_album_id" => $request->album_id]);
-
-            if ($image_entries) {
-                return ResponseMessage::success("Album Assigned!");
-            } else {
-                return ResponseMessage::fail("Failed To Assign Album!");
-            }
-        } else {
-            ResponseMessage::unauthorized($permission);
-        }
-    }
 }

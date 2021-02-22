@@ -11,13 +11,10 @@ class InstituteInfoController extends Controller
 {
     public function index(Request $request)
     {
-        $permission = "View InstituteInfo";
-        $user = $request->user();
-        if ($user->can($permission)) {
-            return InstituteInfo::first();
-        } else {
-            ResponseMessage::unauthorized($permission);
+        if ($request->update) {
+            return InstituteInfo::get();
         }
+        return InstituteInfo::first();
     }
 
 
@@ -30,10 +27,11 @@ class InstituteInfoController extends Controller
                 "institute_name" => 'required|string',
                 "institute_motto" => 'required|string',
                 "institute_shortform" => "required|string",
-                "institute_phonenumbers" => 'required|json',
+                "institute_phonenumbers" => 'required|string',
                 "institute_email" => "required|string",
-                "social_media" => "required|json",
-                "institute_address" => "required|json"
+                "institute_facebook" => "required|string",
+                "institute_youtube" => "required|string",
+                "institute_address" => "required|string"
             ]);
             $InstituteInfo = InstituteInfo::find($id);
             if ($InstituteInfo != null) {
@@ -42,7 +40,8 @@ class InstituteInfoController extends Controller
                 $InstituteInfo->institute_shortform = $request->institute_shortform;
                 $InstituteInfo->institute_phonenumbers = $request->institute_phonenumbers;
                 $InstituteInfo->institute_email = $request->institute_email;
-                $InstituteInfo->social_media = $request->social_media;
+                $InstituteInfo->institute_facebook = $request->institute_facebook;
+                $InstituteInfo->institute_youtube = $request->institute_youtube;
                 $InstituteInfo->institute_address = $request->institute_address;
                 if ($InstituteInfo->save()) {
                     return ResponseMessage::success("Institute Info Updated!");

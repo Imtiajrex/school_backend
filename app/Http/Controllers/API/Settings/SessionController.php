@@ -13,7 +13,7 @@ class SessionController extends Controller
     {
         $user = $request->user();
         $permission = "View Session";
-        if ($user->can($permission)) {
+        if ($user->can($permission) || $user->user_type =="teacher" || $user->user_type =="student") {
             return Session::all();
         } else {
             return ResponseMessage::unauthorized($permission);

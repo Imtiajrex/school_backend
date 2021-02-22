@@ -8,6 +8,7 @@ use App\Models\Books;
 use App\Models\BooksSold;
 use App\Models\Employee;
 use App\Models\PaymentCategory;
+use App\Models\PaymentRequest;
 use App\Models\Students;
 use App\Models\StudentsPayment;
 use App\Models\StudentsPaymentAccount;
@@ -41,54 +42,40 @@ class SellBooksController extends Controller
         $permission = "Sell Book";
         if ($user->can($permission)) {
             $request->validate([
-                "book_id" => "required|numeric",
-                "quantity" => "required|numeric",
-                "price" => "required|numeric",
-                "paid_amount" => "required|numeric",
-                "buyer_type" => "required|string",
-                "buyer_id" => "required|numeric",
+                "values" => "required",
+                "book_issuer_type" => "required",
+                "book_issued_to_id" => "required",
             ]);
 
+            $data = [];
+            $date = date("Y-m-d");
+            $payment_category = "Products";
+            $student_id = Students::where("student_id",$request->book_issued_to_id)->first();
 
-            $books_sold = new BooksSold;
-            $books_sold->book_id = $request->book_id;
-            if (Books::find($request->book_id) == null)
-                return ResponseMessage::fail("Couldn't Find Books!");
-
-            $payment_id = -1;
-
-
-            $books_sold->quantity = $request->quantity;
-            $books_sold->price = $request->price;
-            $books_sold->buyer_type = $request->buyer_type;
-
-            if ($request->buyer_type == 'student') {
-                if (Students::find($request->buyer_id) == null)
-                    return ResponseMessage::fail("Couldn't Find ID!");
-
-                $date = date('Y-m-d');
-                $payment = $this->studentsPayment($request->price, $request->paid_amount, $request->buyer_id, $date);
-                if ($payment != false) {
-                    $payment_id = $payment;
-                } else {
-                    return "Failed To Add Students Payment!";
-                }
-            } else if ($request->buyer_type == 'employee') {
-                if (Employee::find($request->buyer_id) == null)
-                    return ResponseMessage::fail("Couldn't Find ID!");
-            } else if ($request->buyer_type == 'other') {
-                $request->buyer_id = 0;
-            } else {
-                return ResponseMessage::fail("Invalid Buyer Type!");
+            $student_id = $student_id->id;
+            $payment_info = "";
+            $payment_amount = 0;
+            foreach ($request->values as $v) {
+                array_push($data, ["buyer_type" => $request->book_issuer_type, "buyer_id" => $student_id, "date" => $date, "book_id" => $v["book_id"], "price" => $v["amount"], "quantity" => $v["quantity"]]);
+                $payment_info = $payment_info.$v["info"]." (x".$v["quantity"].")\n";
+                $payment_amount+=$v["amount"];
             }
-            $books_sold->buyer_id = $request->buyer_id;
 
-            $books_sold->payment_id = $payment_id;
-            $books_sold->date = $date;
-            if ($books_sold->save()) {
-                $book = Books::find($request->book_id);
-                $book->stock = $book->stock - $request->quantity;
-                $book->save();
+            $student_payment_request = new PaymentRequest();
+            $student_payment_request->student_id = $student_id;
+            $student_payment_request->payment_info = $payment_info;
+            $student_payment_request->payment_category = $payment_category;
+            $student_payment_request->payment_amount = $payment_amount;
+            $student_payment_request->date = $date;
+            $student_payment_request->save();
+            
+
+            if (BooksSold::insert($data)) {
+                foreach ($request->values as $v) {
+                    $book = Books::find($v["book_id"]);
+                    $book->stock = $book->stock - $v["quantity"];
+                    $book->save();
+                }
                 return ResponseMessage::success("Book Sold Successfully!");
             } else {
                 return ResponseMessage::fail("Couldn't Sell Book!");
@@ -119,29 +106,4 @@ class SellBooksController extends Controller
         }
     }
 
-    public function studentsPayment($price, $paid_amount, $student_id, $date)
-    {
-        $receipt_id = (int)microtime(true);
-
-        $payment = new StudentsPayment();
-        $payment->payment_category = "Others";
-        $payment->payment_info = "Books";
-        $payment->payment_amount = $price;
-        $payment->paid_amount = $paid_amount;
-
-        $payment->group_id = $receipt_id;
-        $payment->student_id = $student_id;
-        $payment->date = $date;
-
-
-        if ($payment->save()) {
-            if ($price >  $paid_amount)
-                StudentsPaymentAccount::insert(["amount_difference" => $price - $paid_amount, "student_id" => $student_id, "payment_id" => $payment->id, "status" => "DUE"]);
-
-            StudentsPaymentReceipt::insert(["id" => $receipt_id, "student_id" => $student_id, "payment_id" => $payment->id, 'date' => $date]);
-
-            return $payment->id;
-        } else
-            return false;
-    }
 }

@@ -18,6 +18,10 @@ class CreateMarks extends Migration
             $table->unsignedBigInteger("student_id");
             $table->unsignedBigInteger("exam_id");
             $table->unsignedBigInteger("subject_id");
+            $table->boolean("subject_type");
+            $table->boolean("absent");
+            $table->float("total_mark");
+            $table->float("gpa");
             $table->json("marks");
 
 

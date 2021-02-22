@@ -18,7 +18,7 @@ class StudentAssignmentController extends Controller
     {
         $user = $request->user();
         $permission = "View ClassHasStudents";
-        if ($user->can($permission)) {
+        if ($user->can($permission) || $user->user_type == "teacher" || ($user->user_type == "student" && $user->username == $request->student_id)) {
             $query = [];
             if ($request->session_id) {
                 $query["class_has_students.session_id"] = $request->session_id;
@@ -38,8 +38,18 @@ class StudentAssignmentController extends Controller
                     $query = ["class_has_students.student_id" => $student_id->id];
             }
 
-            if (count($query) != 0)
-                return ClassHasStudents::where($query)->leftJoin("class", "class_has_students.class_id", "=", "class.id")->leftJoin("session", "class_has_students.session_id", "=", "session.id")->leftJoin("department", "class_has_students.department_id", "=", "department.id")->leftJoin("students", "class_has_students.student_id", "=", "students.id")->orderBy("class","desc")->orderBy("department","desc")->orderBy("role","asc")->get(["class_has_students.*", "class.name as class", "session.*", "department.name as department", "students.student_name", "students.student_id as student_identifier"]);
+            if (count($query) != 0) {
+                $students =  ClassHasStudents::where($query)->leftJoin("class", "class_has_students.class_id", "=", "class.id")->leftJoin("session", "class_has_students.session_id", "=", "session.id")->leftJoin("department", "class_has_students.department_id", "=", "department.id")->leftJoin("students", "class_has_students.student_id", "=", "students.id")->orderBy("class_has_students.class_id", "desc")->orderBy("class_has_students.department_id", "desc")->orderBy("role", "asc");
+
+                if ($request->phonebook)
+                    return $students->get(["class_has_students.*", "class.name as class", "session.*", "department.name as department", "students.student_name", "students.student_id as student_identifier", "students.primary_phone", "students.secondary_phone"]);
+                else if ($request->student_options) {
+                    return $students->selectRaw('class_has_students.student_id as value,concat(students.student_id, " ",students.student_name) as text')->get();
+                } else if ($request->all) {
+                    return $students->get(["class_has_students.*", "class.name as class", "session.session", "department.name as department", "students.*"]);
+                } else
+                    return $students->get(["class_has_students.*", "class.name as class", "session.session", "department.name as department", "students.student_name", "students.student_id"]);
+            }
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -99,14 +109,38 @@ class StudentAssignmentController extends Controller
             return ResponseMessage::unauthorized($permission);
         }
     }
+    public function update(Request $request, $id)
+    {
+        $user = $request->user();
+        $permission = "Assign ClassHasStudents";
+        if ($user->can($permission)) {
+            $request->validate([
+                "role" => "required|numeric",
+            ]);
+
+            $role = $request->role;
+
+            $assigned_student = ClassHasStudents::find($id);
+
+            $assigned_student->role = $role;
+
+            if ($assigned_student->save()) {
+                return ResponseMessage::success("Student Assigned Successfully!");
+            } else {
+                return ResponseMessage::fail("Couldn't Assign Student!");
+            }
+        } else {
+            return ResponseMessage::unauthorized($permission);
+        }
+    }
 
 
-    public function destroy($id,Request $request)
+    public function destroy($id, Request $request)
     {
         $user = $request->user();
         $permission = "Delete ClassHasStudents";
         if ($user->can($permission)) {
-            
+
 
             $ClassHasStudents = ClassHasStudents::find($id);
 

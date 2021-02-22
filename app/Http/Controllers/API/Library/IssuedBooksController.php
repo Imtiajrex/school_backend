@@ -17,7 +17,8 @@ class IssuedBooksController extends Controller
         $user = $request->user();
         $permission = "View IssuedBooks";
         if ($user->can($permission)) {
-            return IssuedBooks::all();
+            $request->validate(["book_issued_to_id"=>"required|numeric"]);
+            return IssuedBooks::where("book_issued_to_id",$request->book_issued_to_id)->leftJoin("books","books.id","=","book_id")->orderBy("issue_status","asc")->get(["books.*","issued_books.*"]);
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -29,36 +30,21 @@ class IssuedBooksController extends Controller
         $permission = "Create IssuedBooks";
         if ($user->can($permission)) {
             $request->validate([
-                "book_id" => "required|numeric",
                 "book_issuer_type" => "required|string",
-                "book_issued_to_id" => "required|numeric",
+                "book_issued_to_id" => "required",
                 "book_issued_date" => "required|date",
                 "book_return_date" => "required|date",
-                "issue_status" => "required|string"
+                "book_ids" => "required"
             ]);
 
+            $data = [];
+            $student_id = Students::where("student_id",$request->book_issued_to_id)->first();
 
-            $issued_books = new IssuedBooks;
-            if (Books::find($request->book_id) == null)
-                return ResponseMessage::fail("Couldn't Find The Book");
-            $issued_books->book_id = $request->book_id;
-            $issued_books->book_issuer_type = $request->book_issuer_type;
-
-            if ($request->book_issuer_type == 'student') {
-                if (Students::find($request->book_issued_to_id) == null)
-                    return ResponseMessage::fail("Couldn't Find Student");
-            } else if ($request->book_issuer_type == 'teacher') {
-                if (Employee::find($request->book_issued_to_id) == null)
-                    return ResponseMessage::fail("Couldn't Find Teacher");
-            } else {
-                return ResponseMessage::fail("Issuer Type Not Found!");
+            $student_id = $student_id->id;
+            foreach($request->book_ids as $book){
+                array_push($data,["book_issuer_type"=>$request->book_issuer_type,"book_issued_to_id"=>$student_id,"book_issued_date"=>$request->book_issued_date,"book_return_date"=>$request->book_return_date,"book_id"=>$book,"issue_status"=>"issued"]);
             }
-
-            $issued_books->book_issued_to_id = $request->book_issued_to_id;
-            $issued_books->book_issued_date = $request->book_issued_date;
-            $issued_books->book_return_date = $request->book_return_date;
-            $issued_books->issue_status = $request->issue_status;
-            if ($issued_books->save()) {
+            if (IssuedBooks::insert($data)) {
                 return ResponseMessage::success("Book Issued Successfully!");
             } else {
                 return ResponseMessage::fail("Couldn't Issue Book!");
@@ -74,29 +60,13 @@ class IssuedBooksController extends Controller
         $permission = "Update IssuedBooks";
         if ($user->can($permission)) {
             $request->validate([
-                "book_id" => "required|numeric", "book_issuer_type" => "required|string", "book_issued_to_id" => "required|numeric", "book_issued_date" => "required|date", "book_return_date" => "required|date", "returned_at" => "required|date", "issue_status" => "required|string"
+                "returned_at"=>"required|date"
             ]);
 
             $issued_books = IssuedBooks::find($id);
             if ($issued_books != null) {
-                $issued_books->book_id = $request->book_id;
-                $issued_books->book_issuer_type = $request->book_issuer_type;
-
-                if ($request->book_issuer_type == 'student') {
-                    if (Students::find($request->book_issued_to_id) == null)
-                        return ResponseMessage::fail("Couldn't Find Student");
-                } else if ($request->book_issuer_type == 'teacher') {
-                    if (Employee::find($request->book_issued_to_id) == null)
-                        return ResponseMessage::fail("Couldn't Find Teacher");
-                } else {
-                    return ResponseMessage::fail("Issuer Type Not Found!");
-                }
-
-                $issued_books->book_issued_to_id = $request->book_issued_to_id;
-                $issued_books->book_issued_date = $request->book_issued_date;
-                $issued_books->book_return_date = $request->book_return_date;
                 $issued_books->returned_at = $request->returned_at;
-                $issued_books->issue_status = $request->issue_status;
+                $issued_books->issue_status = "returned";
 
                 if ($issued_books->save()) {
                     return ResponseMessage::success("IssuedBooks Updated Successfully!");

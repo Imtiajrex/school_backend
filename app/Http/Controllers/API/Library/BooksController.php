@@ -14,7 +14,24 @@ class BooksController extends Controller
         $user = $request->user();
         $permission = "View Books";
         if ($user->can($permission)) {
-            return Books::where("deleted",0)->get();
+            $books = Books::where("deleted",0);
+            
+            if($request->category_name){
+                $books = $books->where("category_name",$request->category_name);
+            }
+            if($request->author_name){
+                $author_words = explode(" ",$request->author_name);
+                foreach($author_words as $word){
+                    $books = $books->where("book_name","like","%".$word."%");
+                }
+            }
+            if($request->book_name){
+                $book_words = explode(" ",$request->book_name);
+                foreach($book_words as $word){
+                    $books = $books->where("book_name","like","%".$word."%");
+                }
+            }
+            return $books->get();
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -29,7 +46,7 @@ class BooksController extends Controller
                 "book_name" => "required|string",
                 "author_name" => "required|string",
                 "category_name" => "required|string",
-                "shelf_no" => "required|numeric",
+                "shelf_no" => "required|string",
                 "price" => "required|numeric",
                 "stock" => "required|numeric",
             ]);

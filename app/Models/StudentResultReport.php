@@ -9,4 +9,5 @@ class StudentResultReport extends Model
 {
     use HasFactory;
     protected $table = "student_result_report";
+    public $timestamps = false;
 }

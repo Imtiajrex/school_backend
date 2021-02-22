@@ -8,5 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Pages extends Model
 {
     use HasFactory;
+    protected $casts = ['page_content' => 'json'];
     protected $table = "pages";
+    public $timestamps = false;
 }

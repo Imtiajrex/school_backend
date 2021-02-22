@@ -14,7 +14,7 @@ class SchoolClassController extends Controller
     {
         $permission = "View Class";
         $user = $request->user();
-        if ($user->can($permission)) {
+        if ($user->can($permission) || $user->user_type =="teacher" || $user->user_type =="student") {
             return SchoolClass::all();
         } else {
             ResponseMessage::unauthorized($permission);

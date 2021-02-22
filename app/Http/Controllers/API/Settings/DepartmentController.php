@@ -15,7 +15,7 @@ class DepartmentController extends Controller
     {
         $permission = "View Department";
         $user = $request->user();
-        if ($user->can($permission)) {
+        if ($user->can($permission) || $user->user_type =="teacher" || $user->user_type =="student") {
             $query = [];
             $depts=[];
             if ($request->class_id != null && $request->session_id != null)

@@ -24,7 +24,7 @@ class UserController extends Controller
                 $users = User::where($query)->get(['id', 'name', 'username', 'user_type']);
             foreach ($users as $user) {
                 $user["role_name"] = $user->getRolenames();
-                $role=null;
+                $role = null;
                 if (count($user["role_name"]) > 0)
                     $role = Role::where("name", $user["role_name"])->first();
                 $user["role"] = $role != null ? $role->id : '';
@@ -63,13 +63,14 @@ class UserController extends Controller
 
 
             if ($user->save()) {
-                if ($request->role != null)
-                    $role = $request->role;
-                else
+                if ($request->role != null) {
+                    $role = Role::find($request->role);
+                    $role_name = $role->name;
+                } else
                     return ResponseMessage::success("User Successfully Created!");
 
-                if (Role::where('name', $role)->first() != null) {
-                    if ($user->assignRole($role)) {
+                if ($role != null) {
+                    if ($user->assignRole($role_name)) {
                         return ResponseMessage::success($success_msg);
                     } else {
                         User::where("username", $request->username)->delete();
@@ -169,7 +170,11 @@ class UserController extends Controller
         $user_role = $user->getRoleNames();
         $token = $user->createToken($request->device_name)->plainTextToken;
         $user_permissions = $user->getAllPermissions();
-        return response()->json(["token" => $token, "user_type" => $user_type, "role" => $user_role, "permissions" => $user_permissions]);
+        $permissions = [];
+        foreach($user_permissions as $perm){
+            array_push($permissions,$perm->name);
+        }
+        return response()->json(["token" => $token, "user_type" => $user_type, "role" => $user_role, "permissions" => json_encode($permissions), "user_id" => $user->username]);
     }
 
     public function logout(Request $request)

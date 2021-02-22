@@ -16,7 +16,8 @@ class CreateNotifications extends Migration
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
             $table->string("title");
-            $table->string("content", 1000);
+            $table->json("content");
+            $table->boolean("active");
         });
     }
 

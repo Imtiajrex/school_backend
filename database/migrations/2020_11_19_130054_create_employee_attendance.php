@@ -16,8 +16,9 @@ class CreateEmployeeAttendance extends Migration
         Schema::create('employee_attendance', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger("employee_id");
-            $table->time("access_time");
+            $table->time("access_time")->nullable();
             $table->date("date");
+            $table->boolean("manual")->default(false);
 
 
             $table->foreign("employee_id")->references("id")->on("employee")->onDelete('cascade');

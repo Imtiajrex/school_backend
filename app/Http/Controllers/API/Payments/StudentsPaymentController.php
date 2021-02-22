@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers\API\Payments;
 
-use AccountBalance;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseMessage;
 use App\Models\Accounts;
-use App\Models\PaymentCategory;
+use App\Models\Session;
 use App\Models\Students;
 use App\Models\StudentsPayment;
 use App\Models\StudentsPaymentAccount;
-use App\Models\StudentsPaymentInfo;
 use App\Models\StudentsPaymentReceipt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,18 +19,21 @@ class StudentsPaymentController extends Controller
     {
         $permission = "View Payment";
         $user = $request->user();
-        if ($user->can($permission)) {
+        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_id)) {
             $request->validate([
                 "student_id" => "required",
+                "session" => "required"
             ]);
             $student_id = Students::where("student_id", $request->student_id)->first();
             $student_id = $student_id != null ? $student_id->id : null;
-            $students_payment =  StudentsPayment::where("student_id", $student_id);
+            $session_id = $request->session;
+            $students_payment =  StudentsPayment::where(["students_payment.student_id" => $student_id, "students_payment.session_id" => $session_id]);
             if ($request->from && $request->to) {
                 $from = $request->from;
                 $to = $request->to;
                 $students_payment =  $students_payment->whereBetween("date", [$from, $to]);
             }
+            $students_payment = $students_payment->leftJoin("students", "students.id", "=", "students_payment.student_id");
             return $students_payment->get();
         } else {
             ResponseMessage::unauthorized($permission);
@@ -41,25 +42,24 @@ class StudentsPaymentController extends Controller
 
     public function store(Request $request)
     {
-        $permission = "Add Payment";
+        $permission = "Create Payment";
         $user = $request->user();
         if ($user->can($permission)) {
             $request->validate([
                 "date" => "required|date",
-                "student_id" => "required|numeric",
+                "student_id" => "required",
                 "session_id" => "required|numeric",
                 "payments" => "required"
             ]);
             $date = $request->date;
-            $student_id = $request->student_id;
             $payments = $request->payments;
             $session_id = $request->session_id;
 
 
-
-            if (Students::find($student_id) == null)
+            $student = Students::where("student_id", $request->student_id)->first();
+            if ($student == null)
                 return ResponseMessage::fail("Student Not Found!");
-
+            $student_id = $student->id;
             $receipt_id = StudentsPaymentReceipt::max('id') + 1;
 
 
@@ -84,7 +84,7 @@ class StudentsPaymentController extends Controller
                 Accounts::insert($account_arr);
                 $account_balance = DB::table("account_balance")->where("id", 1)->first();
                 $total_income += $account_balance->cash;
-                DB::table("account_balance")->where("id", 1)->update(["cash"=>$total_income]);
+                DB::table("account_balance")->where("id", 1)->update(["cash" => $total_income]);
                 if (StudentsPaymentReceipt::insert($receipt)) {
 
                     if (!$this->insertDueAdvance($payment_ids_query))
@@ -104,7 +104,7 @@ class StudentsPaymentController extends Controller
     public function update($id, Request $request)
     {
 
-        $permission = "Add Payment";
+        $permission = "Update Payment";
         $user = $request->user();
         if ($user->can($permission)) {
             $request->validate([
@@ -201,7 +201,7 @@ class StudentsPaymentController extends Controller
             $paid_amount = $payment["paid_amount"];
             $payment_info = $payment_info == null ? '' : $payment_info;
             array_push($payment_arr, ["session_id" => $session_id, "student_id" => $student_id, "date" => $date, "payment_category" => $payment_category, "payment_info" => $payment_info, "payment_amount" => $payment_amount, "paid_amount" => $paid_amount, "group_id" => $receipt_id]);
-            array_push($accounts_arr, ["balance_form" => "Cash", "entry_type" => "Credit", "entry_category" => "Student Payment", "entry_info" => "Receipt ID: " . $receipt_id . "\nStudent ID: " . $student_id . "\nStudent Name: " . $student_name . "\nPayment Info: " . $payment_category . " - " . $payment_info, "amount" => $paid_amount, "date" => $date]);
+            array_push($accounts_arr, ["balance_form" => "Cash", "entry_type" => "Credit", "entry_category" => "Student Payment", "entry_info" => "Receipt ID: " . $receipt_id . "\nStudent ID: " . $student->student_id . "\nStudent Name: " . $student_name . "\nPayment Info: " . $payment_category . " - " . $payment_info, "amount" => $paid_amount, "date" => $date]);
         }
         return [$payment_arr, $accounts_arr];
     }

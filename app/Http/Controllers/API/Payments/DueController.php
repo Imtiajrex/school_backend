@@ -18,7 +18,7 @@ class DueController extends Controller
     {
         $permission = "View Due List";
         $user = $request->user();
-        if ($user->can($permission)) {
+        if ($user->can($permission) || ($user->user_type =="student"&& $user->username==$request->student_id)) {
             $request->validate([
                 "student_id" => "required",
             ]);
@@ -35,7 +35,7 @@ class DueController extends Controller
     {
 
         $user = $request->user();
-        $permission = "Update Products";
+        $permission = "Update Due Record";
         if ($user->can($permission)) {
             $request->validate([
                 "amount" => "required|numeric",

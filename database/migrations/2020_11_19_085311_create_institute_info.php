@@ -18,10 +18,11 @@ class CreateInstituteInfo extends Migration
             $table->string("institute_name");
             $table->string("institute_motto");
             $table->string("institute_shortform");
-            $table->string("institute_phonenumbers", 512);
+            $table->string("institute_phonenumbers");
             $table->string("institute_email");
-            $table->string("social_media", 512);
-            $table->string("institute_address", 512);
+            $table->string("institute_facebook");
+            $table->string("institute_youtube");
+            $table->string("institute_address");
             $table->string("institute_logo");
         });
     }

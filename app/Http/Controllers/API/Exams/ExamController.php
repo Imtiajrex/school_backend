@@ -19,37 +19,62 @@ class ExamController extends Controller
     {
         $user = $request->user();
         $permission = "View Exam";
-        if ($user->can($permission)) {
-            if ($request->exam_id != null)
-                return Exam::find($request->exam_id);
+        if ($user->can($permission) || $user->user_type == "teacher") {
+            if ($request->exam_id != null) {
+                $xm =  Exam::find($request->exam_id);
+                if($request->admit_card){
+                    $xm["subjects"] = Subjects::whereIn("id",json_decode($xm['subjects'],true));
+                }
+                return $xm;
+            }
             $query = [];
             if ($request->class_id != null && $request->department_id != null && $request->session_id != null) {
-                $query["class_id"] = $request->class_id;
-                $query["department_id"] = $request->department_id;
-                $query["session_id"] = $request->session_id;
+                $query["exam.class_id"] = $request->class_id;
+                $query["exam.department_id"] = $request->department_id;
+                $query["exam.session_id"] = $request->session_id;
             }
             if (count($query) > 0) {
-                $exam_data = Exam::where([[$query]])->get();
-            } else {
-                $exam_data =  Exam::all();
-            }
+                $exam_data = Exam::where([[$query]]);
+                if ($request->result) {
+                    $exam_data = $exam_data->get(['exam.id', 'exam.exam_name as name']);
+                } else {
+                    $exam_data = $exam_data->leftJoin('class', "class.id", '=', 'exam.class_id');
+                    $exam_data = $exam_data->leftJoin('department', "department.id", '=', 'exam.department_id');
+                    $exam_data = $exam_data->leftJoin('session', "session.id", '=', 'exam.session_id');
+                    $exam_data = $exam_data->get(['exam.*', 'session.session', 'department.name as department', 'class.name as class']);
 
-            foreach ($exam_data as $exm) {
-                $class = SchoolClass::find($exm->class_id);
-                $dept = Department::find($exm->department_id);
-                $sess = Session::find($exm->session_id);
-                $subject_names = [];
-                foreach(json_decode($exm->subjects) as $sub){
-                    array_push($subject_names,Subjects::find($sub)->subject_name);
+                    foreach ($exam_data as $exm) {
+                        $subject_names = [];
+                        foreach (json_decode($exm->subjects) as $sub) {
+                            array_push($subject_names, Subjects::find($sub)->subject_name);
+                        }
+                        $exm["subject_names"] = implode(", ", $subject_names);
+                    }
                 }
-                $exm["subject_names"] = implode(", ",$subject_names);
-                if ($class !== null && $sess != null && $dept != null) {
-                    $exm["class"] = $class->name;
-                    $exm["department"] = $dept->name;
-                    $exm["session"] = $sess->session;
-                }
+                return $exam_data;
             }
-            return $exam_data;
+        } else {
+            return ResponseMessage::unauthorized($permission);
+        }
+    }
+    public function getExamSubjects(Request $request)
+    {
+        $user = $request->user();
+        $permission = "View Exam";
+        if ($user->can($permission) || $user->user_type == "teacher") {
+            $request->validate(["exam_id" => "required", "class_id" => "required", "department_id" => "required", "session_id" => "required"]);
+            $exam_data = Exam::find($request->exam_id);
+            $exam_subject = [];
+            $class = SchoolClass::find($request->class_id);
+            $session = Session::find($request->session_id);
+            $department = Department::find($request->department_id);
+            $s = json_decode($exam_data->subjects);
+            foreach ($s as $sub) {
+                $subject = Subjects::find($sub);
+                if ($subject != null)
+                    array_push($exam_subject, ["subject" => $subject->subject_name, "subject_id" => $sub, "exam" => $exam_data->exam_name, "exam_id" => $exam_data->id, "class" => $class->name, "session" => $session->session, "department" => $department->name, "class_id" => $request->class_id, "department_id" => $request->department_id, "session_id" => $request->session_id]);
+            }
+            return $exam_subject;
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -59,7 +84,7 @@ class ExamController extends Controller
     {
         $user = $request->user();
         $permission = "Create Exam";
-        if ($user->can($permission)) {
+        if ($user->can($permission) || $user->user_type == "teacher") {
             $request->validate([
                 "exam_name" => "required|string",
                 "class_id" => "required|numeric",
@@ -106,7 +131,7 @@ class ExamController extends Controller
     {
         $user = $request->user();
         $permission = "Update Exam";
-        if ($user->can($permission)) {
+        if ($user->can($permission) || $user->user_type == "teacher") {
             $request->validate([
                 "exam_name" => "required|string",
                 "subjects" => "required|json",
@@ -144,7 +169,7 @@ class ExamController extends Controller
     {
         $user = $request->user();
         $permission = "Delete Exam";
-        if ($user->can($permission)) {
+        if ($user->can($permission) || $user->user_type == "teacher") {
             $exam = Exam::find($id);
             if ($exam != null) {
                 $marks = Marks::where("exam_id", $id)->get();

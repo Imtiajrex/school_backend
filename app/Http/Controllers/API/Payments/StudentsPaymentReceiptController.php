@@ -17,13 +17,17 @@ class StudentsPaymentReceiptController extends Controller
     {
         $permission = "View Payment Receipt";
         $user = $request->user();
-        if ($user->can($permission)) {
+        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_id)) {
+            $receipts = [];
             if ($request->receipt_id != null)
-                return StudentsPaymentReceipt::where("receipt_id", $request->receipt_id)->get();
-            else if ($request->student_id != null)
-                return StudentsPaymentReceipt::where("student_id", $request->student_id)->get();
-            else
+                $receipts = StudentsPaymentReceipt::where("students_payment_receipt.id", $request->receipt_id);
+            else if ($request->student_id != null) {
+                $student_id = Students::where("student_id", $request->student_id)->first()->id;
+                $receipts = StudentsPaymentReceipt::where("students_payment_receipt.student_id", $student_id);
+            } else
                 return ResponseMessage::fail("Nothing To Send!");
+
+            return $receipts->leftJoin("students_payment", 'students_payment_receipt.payment_id', '=', 'students_payment.id')->leftJoin("students", 'students.id', '=', 'students_payment_receipt.student_id')->get(['students_payment_receipt.*', 'students_payment.payment_category', 'students_payment.payment_info', 'students_payment.payment_amount', 'students_payment.paid_amount','students.student_name','students.student_id as student_identifier']);
         } else {
             ResponseMessage::unauthorized($permission);
         }
