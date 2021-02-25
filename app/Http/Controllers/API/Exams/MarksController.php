@@ -31,10 +31,10 @@ class MarksController extends Controller
 
             if (count($query) > 0) {
                 $marks = Marks::where([[$query]]);
-                $marks = $marks->leftJoin("class_has_students", "class_has_students.student_id", "=", "marks.student_id");
-                $marks = $marks->leftJoin("students", "students.id", "=", "marks.student_id");
+                $marks = $marks->leftJoin("class_has_students", "class_has_students.id", "=", "marks.student_id");
+                $marks = $marks->leftJoin("students", "students.id", "=", "class_has_students.student_id");
                 $marks = $marks->orderBy("subject_id")->orderBy("class_has_students.role",'asc');
-                $marks = $marks->get(["class_has_students.role", "students.student_id as student_identifier", "students.student_name", "marks.*"]);
+                $marks = $marks->get(["class_has_students.role", "class_has_students.student_identifier", "students.student_name", "marks.*"]);
                 return $marks;
             }
         } else {
@@ -60,9 +60,9 @@ class MarksController extends Controller
             $students = ClassHasStudents::where($query);
             $students = $students->leftJoin("students", "class_has_students.student_id", '=', 'students.id');
             $students = $students->leftJoin("marks", function ($join) use ($exam_id, $subject_id) {
-                $join->on("class_has_students.student_id", "=", "marks.student_id")->where(["exam_id" => $exam_id, "subject_id" => $subject_id]);
+                $join->on("class_has_students.id", "=", "marks.student_id")->where(["exam_id" => $exam_id, "subject_id" => $subject_id]);
             });
-            return $students->get(["students.student_name", "students.student_id as student_identifier", "marks.marks", "class_has_students.student_id", "marks.id"]);
+            return $students->get(["students.student_name", "class_has_students.student_identifier", "marks.marks", "class_has_students.id as student_id", "marks.id"]);
         } else {
             return ResponseMessage::unauthorized($permission);
         }

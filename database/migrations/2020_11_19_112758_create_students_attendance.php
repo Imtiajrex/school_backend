@@ -21,7 +21,7 @@ class CreateStudentsAttendance extends Migration
             $table->boolean("manual")->default(false);
 
 
-            $table->foreign("student_id")->references("id")->on("students")->onDelete('cascade');
+            $table->foreign("student_id")->references("id")->on("class_has_students")->onDelete('cascade');
         });
     }
 

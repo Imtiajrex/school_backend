@@ -17,7 +17,7 @@ class CreateDepartmentTable extends Migration
             $table->id();
             $table->string("name");
             $table->unsignedBigInteger("class_id");
-            $table->unsignedBigInteger("department_id");
+            $table->unsignedBigInteger("session_id");
 
             $table->foreign("class_id")->references("id")->on("class")->onDelete("cascade");
             $table->foreign("session_id")->references("id")->on("session")->onDelete("cascade");

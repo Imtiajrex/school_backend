@@ -19,11 +19,11 @@ class ExamController extends Controller
     {
         $user = $request->user();
         $permission = "View Exam";
-        if ($user->can($permission) || $user->user_type == "teacher") {
+        if ($user->can($permission) || $user->user_type == "teacher" || $user->user_type == "student") {
             if ($request->exam_id != null) {
                 $xm =  Exam::find($request->exam_id);
-                if($request->admit_card){
-                    $xm["subjects"] = Subjects::whereIn("id",json_decode($xm['subjects'],true));
+                if ($request->admit_card) {
+                    $xm["subjects"] = Subjects::whereIn("id", json_decode($xm['subjects'], true));
                 }
                 return $xm;
             }

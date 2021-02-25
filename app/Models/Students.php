@@ -10,4 +10,6 @@ class Students extends Model
     use HasFactory;
     protected $table = "students";
     public $timestamps = false;
+    
+    protected $casts = ['extended_info' => 'json'];
 }

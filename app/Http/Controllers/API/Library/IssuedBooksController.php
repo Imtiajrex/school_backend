@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Library;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseMessage;
 use App\Models\Books;
+use App\Models\ClassHasStudents;
 use App\Models\Employee;
 use App\Models\IssuedBooks;
 use App\Models\Students;
@@ -38,7 +39,7 @@ class IssuedBooksController extends Controller
             ]);
 
             $data = [];
-            $student_id = Students::where("student_id",$request->book_issued_to_id)->first();
+            $student_id = ClassHasStudents::find($request->book_issued_to_id);
 
             $student_id = $student_id->id;
             foreach($request->book_ids as $book){

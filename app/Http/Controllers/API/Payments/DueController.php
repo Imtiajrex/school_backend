@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Payments;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseMessage;
 use App\Models\Accounts;
+use App\Models\ClassHasStudents;
 use App\Models\Students;
 use App\Models\StudentsPayment;
 use App\Models\StudentsPaymentAccount;
@@ -18,16 +19,17 @@ class DueController extends Controller
     {
         $permission = "View Due List";
         $user = $request->user();
-        if ($user->can($permission) || ($user->user_type =="student"&& $user->username==$request->student_id)) {
-            $request->validate([
-                "student_id" => "required",
-            ]);
-            $student_id = Students::where("student_id", $request->student_id)->first();
-            if ($student_id != null) $student_id = $student_id->id;
-            else return [];
-            return StudentsPaymentAccount::where("students_payment_accounts.student_id", $student_id)->leftJoin("students", "students_payment_accounts.student_id", "=", "students.id")->leftJoin("students_payment", "students_payment_accounts.payment_id", "=", "students_payment.id")->leftJoin("class_has_students", "students.id", "=", "class_has_students.student_id")->leftJoin("session", "class_has_students.session_id", "=", "session.id")->get(['students_payment_accounts.*', 'students_payment_accounts.amount as fees', 'students.student_id as student_identifier', 'students.student_name', 'class_has_students.session_id', 'session.session', 'students_payment.payment_category', 'students_payment.payment_info']);
+        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_identifier)) {
+            if ($request->student_identifier) {
+                $student_id = ClassHasStudents::where("student_identifier", $request->student_identifier)->first();
+                $student_id = $student_id != null ? $student_id->id : null;
+            } else if ($request->student_id) {
+                $student_id = $request->student_id;
+            }
+            if ($student_id)
+                return StudentsPaymentAccount::where("students_payment_accounts.student_id", $student_id)->leftJoin("class_has_students", "students_payment_accounts.student_id", "=", "class_has_students.id")->leftJoin("students", "class_has_students.student_id", "=", "students.id")->leftJoin("students_payment", "students_payment_accounts.payment_id", "=", "students_payment.id")->leftJoin("session", "class_has_students.session_id", "=", "session.id")->leftJoin("class", "class.id", "=", 'class_has_students.class_id')->leftJoin("department", "department.id", "=", 'class_has_students.department_id')->get(['class.name as class', 'department.name as department', 'students_payment_accounts.amount', 'class_has_students.id as student_id', 'class_has_students.session_id', 'class_has_students.student_identifier', 'students.student_name', 'session.session', 'students_payment.payment_category', 'students_payment.payment_info', 'students_payment_accounts.id', 'students_payment_accounts.payment_id',]);
         } else {
-            ResponseMessage::unauthorized($permission);
+            return ResponseMessage::unauthorized($permission);
         }
     }
 
@@ -49,6 +51,8 @@ class DueController extends Controller
                     return ResponseMessage::fail('Failed To Update Due!');
                 }
             }
+        } else {
+            return ResponseMessage::unauthorized($permission);
         }
     }
     public function destroy($id, Request $request)
@@ -85,9 +89,8 @@ class DueController extends Controller
             $session_id = $request->session_id;
 
 
+            $student_id = $request->student_id;
 
-            if (Students::find($student_id) == null)
-                return ResponseMessage::fail("Student Not Found!");
 
             $receipt_id = StudentsPaymentReceipt::count() + 1;
 
@@ -114,7 +117,7 @@ class DueController extends Controller
                 Accounts::insert($accounts_arr);
                 $account_balance = DB::table("account_balance")->where("id", 1)->first();
                 $total_income += $account_balance->cash;
-                DB::table("account_balance")->where("id", 1)->update(["cash"=>$total_income]);
+                DB::table("account_balance")->where("id", 1)->update(["cash" => $total_income]);
                 if (count($due_delete_data) > 0)
                     StudentsPaymentAccount::destroy($due_delete_data);
                 if (count($due_update_data) > 0)
@@ -129,7 +132,7 @@ class DueController extends Controller
                 return ResponseMessage::fail("Due Payment Record Insertion Failed!");
             }
         } else {
-            ResponseMessage::unauthorized($permission);
+            return ResponseMessage::unauthorized($permission);
         }
     }
 
@@ -163,6 +166,6 @@ class DueController extends Controller
             array_push($accounts_arr, ["balance_form" => "Cash", "entry_type" => "Credit", "entry_category" => "Student Payment", "entry_info" => "Receipt ID: " . $receipt_id . "\nStudent ID: " . $student_id . "\nStudent Name: " . $student_name . "\nPayment Info: " . $payment_category . " - " . $payment_info, "amount" => $paid_amount, "date" => $date]);
         }
 
-        return [$payment_arr, $due_delete_arr, $due_update_arr,$accounts_arr];
+        return [$payment_arr, $due_delete_arr, $due_update_arr, $accounts_arr];
     }
 }

@@ -27,7 +27,7 @@ class CreateStudentsPayment extends Migration
             $table->timestamp("created_at")->useCurrent();
             $table->timestamp("updated_at")->nullable();
 
-            $table->foreign("student_id")->references("id")->on("students")->onDelete('cascade');
+            $table->foreign("student_id")->references("id")->on("class_has_students")->onDelete('cascade');
             $table->foreign("session_id")->references("id")->on("session")->onDelete('cascade');
 
             $table->index("group_id");

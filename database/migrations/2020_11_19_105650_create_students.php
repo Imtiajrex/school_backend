@@ -15,7 +15,6 @@ class CreateStudents extends Migration
     {
         Schema::create('students', function (Blueprint $table) {
             $table->id();
-            $table->string("student_id");
             $table->string("student_name");
             $table->string("mother_name");
             $table->string("father_name");
@@ -28,8 +27,6 @@ class CreateStudents extends Migration
             $table->string("student_email")->default('');
             $table->string("enrollment_status");
             $table->json("extended_info")->default('{}');
-
-            $table->unique("student_id");
         });
     }
 

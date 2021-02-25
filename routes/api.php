@@ -36,6 +36,7 @@ use App\Http\Controllers\API\Library\IssuedBooksController;
 use App\Http\Controllers\API\Library\SellBooksController;
 
 use App\Http\Controllers\API\Accounts\AccountsController;
+use App\Http\Controllers\API\AttendanceDevice\AttendanceFetchController;
 use App\Http\Controllers\API\Library\BooksCategoryController;
 use App\Http\Controllers\API\Messages\EmployeeMessageController;
 use App\Http\Controllers\API\Messages\SMSController;
@@ -76,27 +77,28 @@ use App\Models\StudentAttendanceTime;
 |
 */
 
+Route::get("attendance", [AttendanceFetchController::class, 'index']);
 Route::post('login', [UserController::class, 'login']);
 
-Route::get("homepage/institute_info",[InstituteInfoController::class,"index"]);
-Route::get("homepage/pages",[PageController::class,"index"]);
-Route::get("homepage/sub_pages",[SubPageController::class,"index"]);
-Route::get("homepage/slideshow",[SlideshowController::class,"index"]);
-Route::get("homepage/homepage",[HomepageController::class,"index"]);
-Route::get("homepage/notifications",[NotificationController::class,"index"]);
+Route::get("homepage/institute_info", [InstituteInfoController::class, "index"]);
+Route::get("homepage/pages", [PageController::class, "index"]);
+Route::get("homepage/sub_pages", [SubPageController::class, "index"]);
+Route::get("homepage/slideshow", [SlideshowController::class, "index"]);
+Route::get("homepage/homepage", [HomepageController::class, "index"]);
+Route::get("homepage/notifications", [NotificationController::class, "index"]);
 
-Route::get("homepage/testimonial",[TestimonialController::class,"index"]);
-Route::get("homepage/school_specialty",[SchoolSpecialtyController::class,"index"]);
-Route::get("homepage/about_school",[AboutSchoolController::class,"index"]);
-Route::get("homepage/employee",[EmployeeController::class,"index"]);
-Route::get("homepage/figure",[FigureController::class,"index"]);
-Route::get("homepage/albums",[AlbumController::class,"index"]);
-Route::get("homepage/gallery",[GalleryController::class,"index"]);
+Route::get("homepage/testimonial", [TestimonialController::class, "index"]);
+Route::get("homepage/school_specialty", [SchoolSpecialtyController::class, "index"]);
+Route::get("homepage/about_school", [AboutSchoolController::class, "index"]);
+Route::get("homepage/employee", [EmployeeController::class, "index"]);
+Route::get("homepage/figure", [FigureController::class, "index"]);
+Route::get("homepage/albums", [AlbumController::class, "index"]);
+Route::get("homepage/gallery", [GalleryController::class, "index"]);
 
 
 Route::middleware("auth:sanctum")->group(function () {
     Route::get('logout', [UserController::class, 'logout']);
-
+    Route::post("attendance/assign_card", [AttendanceFetchController::class, "assignID"]);
     Route::prefix('settings')->group(function () {
 
         Route::resource('user', UserController::class)->only([
@@ -163,7 +165,7 @@ Route::middleware("auth:sanctum")->group(function () {
         ]);
 
         Route::resource('student_assignment', StudentAssignmentController::class)->only([
-            'index', 'store','update', 'destroy'
+            'index', 'store', 'update', 'destroy'
         ]);
 
         Route::resource('assign_fees', StudentPaymentInfoController::class)->only([
@@ -172,8 +174,8 @@ Route::middleware("auth:sanctum")->group(function () {
         Route::resource('student_attendance', StudentsAttendanceController::class)->only([
             'index', 'store', 'destroy'
         ]);
-        Route::get('mark_attendance', [StudentsAttendanceController::class,'getManualAttendance']);
-        Route::post('mark_attendance', [StudentsAttendanceController::class,'markAttendance']);
+        Route::get('mark_attendance', [StudentsAttendanceController::class, 'getManualAttendance']);
+        Route::post('mark_attendance', [StudentsAttendanceController::class, 'markAttendance']);
         Route::get("student_monthly_attendance", [StudentsAttendanceController::class, "getMonthlyAttendance"]);
     });
 
@@ -194,8 +196,8 @@ Route::middleware("auth:sanctum")->group(function () {
             'index', 'store', 'update', 'destroy'
         ]);
 
-        Route::get('mark_attendance', [EmployeeAttendanceController::class,'getManualAttendance']);
-        Route::post('mark_attendance', [EmployeeAttendanceController::class,'markAttendance']);
+        Route::get('mark_attendance', [EmployeeAttendanceController::class, 'getManualAttendance']);
+        Route::post('mark_attendance', [EmployeeAttendanceController::class, 'markAttendance']);
     });
     Route::prefix('exams')->group(function () {
 
@@ -218,19 +220,19 @@ Route::middleware("auth:sanctum")->group(function () {
             'index', 'store', 'update', 'destroy'
         ]);
 
-        Route::post('quick_sms', [SMSController::class,"quickSms"]);
-        Route::post('student_sms', [SMSController::class,"studentSms"]);
-        Route::post('employee_sms', [SMSController::class,"employeeSms"]);
-        
-        Route::put('sms_account', [SMSController::class,"updateSMSAccount"]);
-        Route::get('sms_account', [SMSController::class,"getSMSAccount"]);
+        Route::post('quick_sms', [SMSController::class, "quickSms"]);
+        Route::post('student_sms', [SMSController::class, "studentSms"]);
+        Route::post('employee_sms', [SMSController::class, "employeeSms"]);
+
+        Route::put('sms_account', [SMSController::class, "updateSMSAccount"]);
+        Route::get('sms_account', [SMSController::class, "getSMSAccount"]);
     });
     Route::prefix('results')->group(function () {
 
         Route::resource('result', ResultController::class)->only([
             'index', 'store', 'update', 'destroy'
         ]);
-        Route::get("get_result",[ResultController::class,"getResult"]);
+        Route::get("get_result", [ResultController::class, "getResult"]);
         Route::resource("result_publishing", ResultPublishingController::class)->only(["index", 'store']);
     });
     Route::prefix('accounts')->group(function () {

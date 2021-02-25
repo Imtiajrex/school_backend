@@ -22,7 +22,7 @@ class CreateStudentsPaymentReceipt extends Migration
             $table->timestamp("updated_at")->nullable();
 
             $table->index("id");
-            $table->foreign("student_id")->references("id")->on("students")->onDelete('cascade');
+            $table->foreign("student_id")->references("id")->on("class_has_students")->onDelete('cascade');
             $table->foreign("payment_id")->references("id")->on("students_payment")->onDelete('cascade');
         });
     }

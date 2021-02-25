@@ -20,7 +20,7 @@ class CreateAccounts extends Migration
             $table->date("date");
             $table->string("entry_category");
             $table->string("entry_info")->nullable();
-            $table->int("payment_id")->nullable();
+            $table->integer("payment_id")->nullable();
             $table->float("amount");
 
             $table->index("balance_form");

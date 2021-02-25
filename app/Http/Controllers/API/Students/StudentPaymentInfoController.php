@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API\Students;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseMessage;
 use App\Models\PaymentCategory;
-use App\Models\Students;
 use App\Models\StudentsPaymentInfo;
 use Illuminate\Http\Request;
 
@@ -15,28 +14,12 @@ class StudentPaymentInfoController extends Controller
     {
         $user = $request->user();
         $permission = "View Student Payment Info";
-        if ($user->can($permission)  || ($user->user_type =="student"&& $user->username==$request->student_id)) {
-            $name = "";
-            if ($request->std_id) {
-                $student = Students::where("student_id", $request->std_id)->first();
-                if ($student != null) {
-                    $student_id = $student->id;
-                    $name = $student->student_name;
-                } else
-                    return [];
-            } else if ($request->student_id) {
-                $student_id = $request->student_id;
-            }
+        if ($user->can($permission)  || ($user->user_type == "student" && $user->username == $request->student_id)) {
+            $std_pay_info =  StudentsPaymentInfo::where("students_payment_info.student_id", $request->student_id)->leftJoin("payment_category", "payment_category.id", '=', 'student_payment_category');
+            $std_pay_info = $std_pay_info->rightJoin("class_has_students","class_has_students.id",'=','students_payment_info.student_id');
+            $std_pay_info = $std_pay_info->leftJoin("students","students.id",'=','class_has_students.student_id')->orderBy("role",'desc');
 
-
-            $std_pay_info =  StudentsPaymentInfo::where("student_id", $student_id)->get();
-            foreach ($std_pay_info as $spi) {
-                $spi["std_id"] = $request->std_id;
-                $spi["student_name"] = $name;
-                $payment_category = PaymentCategory::find($spi->student_payment_category);
-                $spi["payment_category"] = $payment_category->category_name;
-            }
-            return $std_pay_info;
+            return $std_pay_info->get(["students.student_name","class_has_students.student_identifier","category_name as payment_category","students_payment_info.id","student_default_fees"]);
         } else {
             return ResponseMessage::unauthorized($permission);
         }
@@ -48,21 +31,16 @@ class StudentPaymentInfoController extends Controller
         $permission = "Assign Student Payment Info";
         if ($user->can($permission)) {
             $request->validate([
-                "student_id" => "required",
+                "student_id" => "required|numeric",
                 "payment_category_id" => "required|numeric",
                 "student_default_fees" => "required|numeric"
             ]);
 
 
-            $student = Students::where("student_id", $request->student_id)->first();
-            if ($student == null)
-                return ResponseMessage::fail("Student Doesn't Exist!");
-            $student_id = $student->id;
-
             if (PaymentCategory::find($request->payment_category_id) == null)
                 return ResponseMessage::fail("Payment Category Doesn't Exist!");
 
-            $_payment_set = StudentsPaymentInfo::where(["student_id" => $student_id, "student_payment_category" => $request->payment_category_id])->first();
+            $_payment_set = StudentsPaymentInfo::where(["student_id" => $request->student_id, "student_payment_category" => $request->payment_category_id])->first();
             if ($_payment_set != null) {
                 $payment_set = $_payment_set;
             } else if ($request->id != null) {
@@ -71,7 +49,7 @@ class StudentPaymentInfoController extends Controller
                 $payment_set = new StudentsPaymentInfo;
             }
 
-            $payment_set->student_id = $student_id;
+            $payment_set->student_id = $request->student_id;
             $payment_set->student_payment_category = $request->payment_category_id;
             $payment_set->student_default_fees = $request->student_default_fees;
             if ($payment_set->save()) {
@@ -95,7 +73,6 @@ class StudentPaymentInfoController extends Controller
                         return ResponseMessage::success("Payment Info Deleted!");
                 }
             }
-
         } else {
             ResponseMessage::unauthorized($permission);
         }

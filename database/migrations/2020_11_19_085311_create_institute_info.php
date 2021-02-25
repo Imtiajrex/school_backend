@@ -24,6 +24,7 @@ class CreateInstituteInfo extends Migration
             $table->string("institute_youtube");
             $table->string("institute_address");
             $table->string("institute_logo");
+            $table->string("attendance_device");
         });
     }
 

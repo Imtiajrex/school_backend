@@ -4,10 +4,8 @@ namespace App\Http\Controllers\API\Payments;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseMessage;
-use App\Models\PaymentCategory;
-use App\Models\Students;
+use App\Models\ClassHasStudents;
 use App\Models\StudentsPayment;
-use App\Models\StudentsPaymentAccount;
 use App\Models\StudentsPaymentReceipt;
 use Illuminate\Http\Request;
 
@@ -17,19 +15,26 @@ class StudentsPaymentReceiptController extends Controller
     {
         $permission = "View Payment Receipt";
         $user = $request->user();
-        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_id)) {
-            $receipts = [];
+        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_identifier)) {
+            $receipts = null;
             if ($request->receipt_id != null)
                 $receipts = StudentsPaymentReceipt::where("students_payment_receipt.id", $request->receipt_id);
-            else if ($request->student_id != null) {
-                $student_id = Students::where("student_id", $request->student_id)->first()->id;
-                $receipts = StudentsPaymentReceipt::where("students_payment_receipt.student_id", $student_id);
-            } else
-                return ResponseMessage::fail("Nothing To Send!");
+            else {
+                if ($request->student_identifier) {
+                    $student_id = ClassHasStudents::where("student_identifier", $request->student_identifier)->first();
+                    $student_id = $student_id != null ? $student_id->id : null;
+                } else if ($request->student_id)
+                    $student_id = $request->student_id;
+                else
+                    return [];
 
-            return $receipts->leftJoin("students_payment", 'students_payment_receipt.payment_id', '=', 'students_payment.id')->leftJoin("students", 'students.id', '=', 'students_payment_receipt.student_id')->get(['students_payment_receipt.*', 'students_payment.payment_category', 'students_payment.payment_info', 'students_payment.payment_amount', 'students_payment.paid_amount','students.student_name','students.student_id as student_identifier']);
+                $receipts = StudentsPaymentReceipt::where("students_payment_receipt.student_id", $student_id);
+            }
+
+            if ($receipts)
+                return $receipts->leftJoin("students_payment", 'students_payment_receipt.payment_id', '=', 'students_payment.id')->leftJoin('class_has_students', "class_has_students.id", '=', 'students_payment_receipt.student_id')->leftJoin("students", 'students.id', '=', 'class_has_students.student_id')->get(['students_payment_receipt.*', 'students_payment.payment_category', 'students_payment.payment_info', 'students_payment.payment_amount', 'students_payment.paid_amount', 'students.student_name', 'class_has_students.student_identifier']);
         } else {
-            ResponseMessage::unauthorized($permission);
+            return ResponseMessage::unauthorized($permission);
         }
     }
 
@@ -63,7 +68,7 @@ class StudentsPaymentReceiptController extends Controller
                 return ResponseMessage::fail("Failed To Create Receipt!");
             }
         } else {
-            ResponseMessage::unauthorized($permission);
+            return ResponseMessage::unauthorized($permission);
         }
     }
 
@@ -80,7 +85,7 @@ class StudentsPaymentReceiptController extends Controller
                 return ResponseMessage::fail("Payment Receipt Doesn't Exist!");
             }
         } else {
-            ResponseMessage::unauthorized($permission);
+            return ResponseMessage::unauthorized($permission);
         }
     }
 }

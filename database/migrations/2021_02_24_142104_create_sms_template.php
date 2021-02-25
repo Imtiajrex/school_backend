@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMessages extends Migration
+class CreateSmsTemplate extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,10 @@ class CreateMessages extends Migration
      */
     public function up()
     {
-        Schema::create('messages', function (Blueprint $table) {
+        Schema::create('sms_template', function (Blueprint $table) {
             $table->id();
-            $table->string("recipient_type");
-            $table->string("recipient_address");
-            $table->string("message_title");
-            $table->string("message_content", 750);
-            $table->boolean("seen_status");
+            $table->string("title");
+            $table->string("template",1000);
         });
     }
 
@@ -30,6 +27,6 @@ class CreateMessages extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('messages');
+        Schema::dropIfExists('sms_template');
     }
 }

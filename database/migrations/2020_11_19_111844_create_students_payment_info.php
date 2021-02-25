@@ -19,7 +19,7 @@ class CreateStudentsPaymentInfo extends Migration
             $table->string("student_payment_category");
             $table->string("student_default_fees");
 
-            $table->foreign("student_id")->references("id")->on("students")->onDelete('cascade');
+            $table->foreign("student_id")->references("id")->on("class_has_students")->onDelete('cascade');
         });
     }
 

@@ -24,8 +24,13 @@ class ResultController extends Controller
     {
         $user = $request->user();
         $permission = "View Result";
-        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_id)) {
+        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_identifier)) {
+            if ($request->student_identifier && $request->student) {
+                $student_id = ClassHasStudents::where("student_identifier", $request->student_identifier)->first();
+                $student_id = $student_id ?? $student_id->id;
 
+                return StudentResultReport::where(["student_id" => $student_id, "result_status" => true])->leftJoin("results", "results.id", "=", "student_result_report.result_id")->get(["result_name", "results.id", "student_id"]);
+            }
             $results = [];
             $query = [];
             if ($request->class_id != null && $request->department_id != null && $request->session_id != null)
@@ -68,7 +73,7 @@ class ResultController extends Controller
     {
         $user = $request->user();
         $permission = "View Result";
-        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_id)) {
+        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_identifier)) {
             $request->validate([
                 "result_id" => "required|numeric"
             ]);
@@ -90,13 +95,13 @@ class ResultController extends Controller
                 if ($request->published) {
                     $results = $results->where("result_status", 1);
                 }
-                $results = $results->leftJoin("results", "results.id", "=", "student_result_report.result_id")->leftJoin("students", "students.id", "=", "student_result_report.student_id")->leftJoin("class", "class.id", "=", "results.class_id")->leftJoin("department", "department.id", "=", "results.department_id")->leftJoin("session", "session.id", "=", "results.session_id")->leftJoin("class_has_students", function ($join) {
-                    $join->on("class_has_students.student_id", "student_result_report.student_id");
-                    $join->on("class_has_students.session_id", "results.session_id");
-                    $join->on("class_has_students.class_id", "results.class_id");
-                    $join->on("class_has_students.department_id", "results.department_id");
-                });
-                $results = $results->orderBy("class_has_students.role", "asc")->get(["results.result_name", "student_result_report.student_id", "students.student_name", "students.student_id as student_identifier", "class.name as class", "department.name as department", "session.session", "student_image", "class_has_students.role"]);
+                $results = $results->leftJoin("results", "results.id", "=", "student_result_report.result_id")->leftJoin("class", "class.id", "=", "results.class_id")->leftJoin("department", "department.id", "=", "results.department_id")->leftJoin("session", "session.id", "=", "results.session_id")->leftJoin("class_has_students", function ($join) {
+                    $join->on("class_has_students.id", '=', "student_result_report.student_id");
+                    $join->on("class_has_students.session_id", '=', "results.session_id");
+                    $join->on("class_has_students.class_id", '=', "results.class_id");
+                    $join->on("class_has_students.department_id", '=', "results.department_id");
+                })->leftJoin("students", "students.id", "=", "class_has_students.student_id");
+                $results = $results->orderBy("class_has_students.role", "asc")->get(["results.result_name", "student_result_report.student_id", "students.student_name", "class_has_students.student_identifier", "class.name as class", "department.name as department", "session.session", "student_image", "class_has_students.role"]);
             } else {
                 return [];
             }
@@ -162,10 +167,10 @@ class ResultController extends Controller
                     array_push($result_has_exams, ["result_id" => $result->id, "exam_id" => $exam["exam_id"], "exam_percentage" => $exam["exam_percentage"]]);
                 }
 
-                $students = ClassHasStudents::select('student_id')->where(["class_id" => $request->class_id, "department_id" => $request->department_id])->get();
+                $students = ClassHasStudents::select('id')->where(["session_id" => $request->session_id, "class_id" => $request->class_id, "department_id" => $request->department_id])->get();
                 $student_result_report = [];
                 foreach ($students as $student) {
-                    array_push($student_result_report, ["result_id" => $result->id, "student_id" => $student->student_id, "result_status" => 0, "result_remarks" => ""]);
+                    array_push($student_result_report, ["result_id" => $result->id, "student_id" => $student->id, "result_status" => 0, "result_remarks" => ""]);
                 }
                 if (ResultHasExam::insert($result_has_exams)) {
                     if (StudentResultReport::insert($student_result_report))

@@ -15,10 +15,10 @@ class CreateFiguresTable extends Migration
     {
         Schema::create('figures', function (Blueprint $table) {
             $table->id();
-            $table->int("students");
-            $table->int("teachers");
-            $table->int("result");
-            $table->int("parent_satisfaction");
+            $table->integer("students");
+            $table->integer("teachers");
+            $table->integer("result");
+            $table->integer("parent_satisfaction");
         });
     }
 

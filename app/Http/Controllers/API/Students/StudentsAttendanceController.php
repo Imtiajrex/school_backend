@@ -19,16 +19,17 @@ class StudentsAttendanceController extends Controller
     {
         $user = $request->user();
         $permission = "View Student Attendance";
-        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_id)) {
+        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_identifier)) {
             $request->validate(["date" => "required|date"]);
             $from = $request->date;
             $to = $request->date;
             $query = [];
             if ($request->session_id) {
                 $query["class_has_students.session_id"] = $request->session_id;
-
+                $session_id = $request->session_id;
                 if ($request->class_id) {
                     $query["class_has_students.class_id"] = $request->class_id;
+                    $class_id = $request->class_id;
 
                     if ($request->department_id) {
                         $query["class_has_students.department_id"] = $request->department_id;
@@ -36,30 +37,29 @@ class StudentsAttendanceController extends Controller
                 }
             }
 
-            if ($request->student_id) {
-                $student_id = Students::where("student_id", $request->student_id)->first();
-                if ($student_id)
-                    $query["class_has_students.student_id"] = $student_id->id;
+            if ($request->student_identifier) {
+                $query = ["class_has_students.student_identifier" => $request->student_identifier];
+                $class_has_students = ClassHasStudents::where("student_identifier", $request->student_identifier)->first();
+                $session_id = $class_has_students->session_id;
+                $class_id = $class_has_students->class_id;
             }
 
             if (count($query) != 0) {
-                $start_time = StudentAttendanceTime::where(["session_id" => $request->session_id, "class_id" => $request->class_id])->first();
+
+                $start_time = StudentAttendanceTime::where(["session_id" => $session_id, "class_id" => $class_id])->first();
                 $start_time = $start_time != null ? $start_time->start_time : "23:59:00";
                 $students =  ClassHasStudents::where($query);
                 $students = $students->leftJoin("class", "class_has_students.class_id", "=", "class.id")->leftJoin("session", "class_has_students.session_id", "=", "session.id")->leftJoin("department", "class_has_students.department_id", "=", "department.id")->leftJoin("students", "class_has_students.student_id", "=", "students.id");
                 $students = $students->leftJoin("students_attendance", function ($join) use ($from, $to) {
-                    $join->on("students_attendance.student_id", "=", "students.id")->whereBetween("students_attendance.date", [$from, $to]);
+                    $join->on("students_attendance.student_id", "=", "class_has_students.id")->whereBetween("students_attendance.date", [$from, $to]);
                 });
-                if ($request->order_by == "Student")
-                    $students =  $students->orderBy('role', 'asc')->orderBy('students.student_id', 'asc');
-                else
-                    $students =  $students->orderBy('role', 'asc')->orderBy('students_attendance.date', 'asc');
+                $students = $students->orderBy('role', 'asc');
                 if ($request->group) {
                     $students = $students->groupBy("class_has_students.student_id");
-                    $students->selectRaw("class_has_students.*, class.name as class, session.*, department.name as department, students.student_name, students.student_id as student_identifier,students_attendance.date,students_attendance.access_time,case when students_attendance.access_time is not null then case when students_attendance.access_time> '$start_time' then 'Late' else 'Present' end  else 'Absent' end as attendance_status,group_concat(access_time,'\n') as access_time_group");
+                    $students->selectRaw("class_has_students.*, class.name as class, session.*, department.name as department, students.student_name, class_has_students.student_identifier,students_attendance.date,students_attendance.access_time,case when students_attendance.access_time is not null then case when min(students_attendance.access_time) > '$start_time' then 'Late' else 'Present' end  else 'Absent' end as attendance_status,group_concat(access_time,'\n') as access_time_group");
                     return $students->get();
                 }
-                $students->selectRaw("class_has_students.*, class.name as class, session.*, department.name as department, students.student_name, students.student_id as student_identifier,students_attendance.date,students_attendance.access_time,case when students_attendance.access_time is not null then case when students_attendance.access_time> '$start_time' then 'Late' else 'Present' end  else 'Absent' end as attendance_status");
+                $students->selectRaw("class_has_students.*, class.name as class, session.*, department.name as department, students.student_name, class_has_students.student_identifier,students_attendance.date,students_attendance.access_time,case when students_attendance.access_time is not null then case when min(students_attendance.access_time) > '$start_time' then 'Late' else 'Present' end  else 'Absent' end as attendance_status");
                 return $students->get();
             }
         } else {
@@ -71,16 +71,17 @@ class StudentsAttendanceController extends Controller
 
         $user = $request->user();
         $permission = "View Student Attendance";
-        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_id)) {
+        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_identifier)) {
             $request->validate(["month" => "required", "year" => "required"]);
             $year = Session::find($request->year)->session;
 
             $query = [];
             if ($request->session_id) {
                 $query["class_has_students.session_id"] = $request->session_id;
-
+                $session_id = $request->session_id;
                 if ($request->class_id) {
                     $query["class_has_students.class_id"] = $request->class_id;
+                    $class_id = $request->class_id;
 
                     if ($request->department_id) {
                         $query["class_has_students.department_id"] = $request->department_id;
@@ -88,14 +89,15 @@ class StudentsAttendanceController extends Controller
                 }
             }
 
-            if ($request->student_id) {
-                $student_id = Students::where("student_id", $request->student_id)->first();
-                if ($student_id)
-                    $query = ["class_has_students.student_id" => $student_id->id];
+            if ($request->student_identifier) {
+                $query = ["class_has_students.student_identifier" => $request->student_identifier];
+                $class_has_students = ClassHasStudents::where("student_identifier", $request->student_identifier)->first();
+                $session_id = $class_has_students->session_id;
+                $class_id = $class_has_students->class_id;
             }
 
             if (count($query) != 0) {
-                $start_time = StudentAttendanceTime::where(["session_id" => $request->session_id, "class_id" => $request->class_id])->first();
+                $start_time = StudentAttendanceTime::where(["session_id" => $session_id, "class_id" => $class_id])->first();
                 $start_time = $start_time != null ? $start_time->start_time : "23:59:00";
                 $students =  ClassHasStudents::where($query);
 
@@ -103,12 +105,12 @@ class StudentsAttendanceController extends Controller
                 $students = $students->leftJoin("session", "class_has_students.session_id", "=", "session.id");
                 $students = $students->leftJoin("department", "class_has_students.department_id", "=", "department.id");
                 $students = $students->leftJoin("students", "class_has_students.student_id", "=", "students.id");
-                $students = $students->get(["class_has_students.student_id", "students.student_id as student_identifier", "students.student_name"]);
+                $students = $students->get(["class_has_students.student_id", "class_has_students.student_identifier", "students.student_name", "class_has_students.id"]);
                 $data = [];
                 foreach ($students as $student) {
-                    $std_att = StudentsAttendance::where('student_id', $student->student_id)->whereYear('date', '=', $year)->whereMonth('date', '=', $request->month);
+                    $std_att = StudentsAttendance::where('student_id', $student->id)->whereYear('date', '=', $year)->whereMonth('date', '=', $request->month);
                     $std_att = $std_att->groupBy("date");
-                    $std_att = $std_att->selectRaw("date,case when students_attendance.access_time is not null then case when TIMEDIFF(students_attendance.access_time, '$start_time')>0 then 'Late' else 'Present' end  else 'Absent' end as attendance_status,group_concat(access_time,'\n') as access_time_group")->get();
+                    $std_att = $std_att->selectRaw("date,case when students_attendance.access_time is not null then case when min(students_attendance.access_time) > '$start_time' then 'Late' else 'Present' end  else 'Absent' end as attendance_status,group_concat(access_time,'\n') as access_time_group")->get();
 
                     $att = [];
                     foreach ($std_att as $student_attendance) {
@@ -131,7 +133,7 @@ class StudentsAttendanceController extends Controller
 
         $user = $request->user();
         $permission = "Assign Student Attendance";
-        if ($user->can($permission)) {
+        if ($user->can($permission) || $user->user_type == "teacher") {
 
             $request->validate([
                 "ids" => "required",
@@ -164,7 +166,7 @@ class StudentsAttendanceController extends Controller
 
         $user = $request->user();
         $permission = "View Student Attendance";
-        if ($user->can($permission)) {
+        if ($user->can($permission) || $user->user_type == "teacher") {
             $request->validate(["date" => "required|date"]);
             $from = $request->date;
             $to = $request->date;
@@ -182,14 +184,14 @@ class StudentsAttendanceController extends Controller
             }
             if (count($query) > 0) {
                 $students = ClassHasStudents::where($query)->leftJoin("students_attendance",  function ($join) use ($from, $to) {
-                    $join->on('students_attendance.student_id', '=', 'class_has_students.student_id')->where("students_attendance.manual", true)->whereBetween("students_attendance.date", [$from, $to]);
+                    $join->on('students_attendance.student_id', '=', 'class_has_students.id')->where("students_attendance.manual", true)->whereBetween("students_attendance.date", [$from, $to]);
                 });
                 $students = $students->leftJoin("class", "class.id", "=", "class_has_students.class_id");
                 $students = $students->leftJoin("department", "department.id", "=", "class_has_students.department_id");
                 $students = $students->leftJoin("session", "session.id", "=", "class_has_students.session_id");
                 $students = $students->leftJoin("students", "students.id", "=", "class_has_students.student_id");
                 $students = $students->orderBy("role");
-                return $students->selectRaw("students.student_name,class.name as class,department.name as department,session.session,case when students_attendance.access_time is not null then 'Present' else 'Absent' end as attendance_status,date,role,students.student_id as student_identifier,students.id")->get();
+                return $students->selectRaw("students.student_name,class.name as class,department.name as department,session.session,case when students_attendance.access_time is not null then 'Present' else 'Absent' end as attendance_status,date,role,class_has_students.student_identifier,class_has_students.id")->get();
             } else return [];
         } else {
             return ResponseMessage::unauthorized($permission);

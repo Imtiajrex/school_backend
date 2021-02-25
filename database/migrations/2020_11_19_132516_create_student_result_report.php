@@ -21,7 +21,7 @@ class CreateStudentResultReport extends Migration
             $table->mediumText("result_remarks");
 
 
-            $table->foreign("student_id")->references("id")->on("students")->onDelete('cascade');
+            $table->foreign("student_id")->references("id")->on("class_has_students")->onDelete('cascade');
             $table->foreign("result_id")->references("id")->on("results")->onDelete('cascade');
         });
     }

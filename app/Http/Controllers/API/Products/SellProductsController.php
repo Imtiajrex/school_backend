@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API\Products;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseMessage;
+use App\Models\ClassHasStudents;
 use App\Models\Products;
 use App\Models\ProductsSold;
 use App\Models\Employee;
@@ -50,7 +51,7 @@ class SellProductsController extends Controller
             $data = [];
             $date = date("Y-m-d");
             $payment_category = "Products";
-            $student_id = Students::where("student_id",$request->product_issued_to_id)->first();
+            $student_id = ClassHasStudents::find($request->product_issued_to_id);
 
             $student_id = $student_id->id;
             $payment_info = "";

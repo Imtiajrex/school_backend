@@ -20,8 +20,9 @@ class ResultPublishingController extends Controller
 
             $result =  StudentResultReport::where("result_id", $request->result_id);
             $result = $result->leftJoin("results", "results.id", "=", "student_result_report.result_id");
-            $result = $result->leftJoin("students", "students.id", "=", "student_result_report.student_id");
-            $result = $result->selectRaw("student_result_report.*,students.student_name,students.student_id as student_identifier,results.result_name,(CASE WHEN student_result_report.result_status = 0 THEN 'Unpublished' ELSE 'Published' END) AS result_status");
+            $result = $result->leftJoin("class_has_students", "class_has_students.id", "=", "student_result_report.student_id");
+            $result = $result->leftJoin("students", "students.id", "=", "class_has_students.student_id");
+            $result = $result->selectRaw("student_result_report.*,students.student_name,class_has_students.student_identifier,results.result_name,(CASE WHEN student_result_report.result_status = 0 THEN 'Unpublished' ELSE 'Published' END) AS result_status");
             return $result->get();
         } else {
             return ResponseMessage::unauthorized($permission);

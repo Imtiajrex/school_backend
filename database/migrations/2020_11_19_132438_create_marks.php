@@ -25,7 +25,7 @@ class CreateMarks extends Migration
             $table->json("marks");
 
 
-            $table->foreign("student_id")->references("id")->on("students")->onDelete('cascade');
+            $table->foreign("student_id")->references("id")->on("class_has_students")->onDelete('cascade');
             $table->foreign("exam_id")->references("id")->on("exam")->onDelete('cascade');
             $table->foreign("subject_id")->references("id")->on("subjects")->onDelete('cascade');
         });

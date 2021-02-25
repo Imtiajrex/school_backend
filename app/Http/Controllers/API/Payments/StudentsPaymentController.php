@@ -5,7 +5,7 @@ namespace App\Http\Controllers\API\Payments;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ResponseMessage;
 use App\Models\Accounts;
-use App\Models\Session;
+use App\Models\ClassHasStudents;
 use App\Models\Students;
 use App\Models\StudentsPayment;
 use App\Models\StudentsPaymentAccount;
@@ -19,24 +19,20 @@ class StudentsPaymentController extends Controller
     {
         $permission = "View Payment";
         $user = $request->user();
-        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_id)) {
-            $request->validate([
-                "student_id" => "required",
-                "session" => "required"
-            ]);
-            $student_id = Students::where("student_id", $request->student_id)->first();
-            $student_id = $student_id != null ? $student_id->id : null;
-            $session_id = $request->session;
-            $students_payment =  StudentsPayment::where(["students_payment.student_id" => $student_id, "students_payment.session_id" => $session_id]);
-            if ($request->from && $request->to) {
-                $from = $request->from;
-                $to = $request->to;
-                $students_payment =  $students_payment->whereBetween("date", [$from, $to]);
+        if ($user->can($permission) || ($user->user_type == "student" && $user->username == $request->student_identifier)) {
+            if ($request->student_identifier) {
+                $student_id = ClassHasStudents::where("student_identifier", $request->student_identifier)->first();
+                $student_id = $student_id != null ? $student_id->id : null;
+            } else
+                $student_id = $request->student_id;
+            if ($student_id) {
+                $students_payment =  StudentsPayment::where(["students_payment.student_id" => $student_id]);
+                $students_payment = $students_payment->leftJoin("class_has_students", "class_has_students.id", "=", "students_payment.student_id");
+                $students_payment = $students_payment->leftJoin("students", "students.id", "=", "class_has_students.student_id");
+                return $students_payment->get();
             }
-            $students_payment = $students_payment->leftJoin("students", "students.id", "=", "students_payment.student_id");
-            return $students_payment->get();
         } else {
-            ResponseMessage::unauthorized($permission);
+            return ResponseMessage::unauthorized($permission);
         }
     }
 
@@ -56,10 +52,7 @@ class StudentsPaymentController extends Controller
             $session_id = $request->session_id;
 
 
-            $student = Students::where("student_id", $request->student_id)->first();
-            if ($student == null)
-                return ResponseMessage::fail("Student Not Found!");
-            $student_id = $student->id;
+            $student_id = $request->student_id;
             $receipt_id = StudentsPaymentReceipt::max('id') + 1;
 
 
@@ -98,7 +91,7 @@ class StudentsPaymentController extends Controller
                 return ResponseMessage::fail("Payment Record Insertion Failed!");
             }
         } else {
-            ResponseMessage::unauthorized($permission);
+            return ResponseMessage::unauthorized($permission);
         }
     }
     public function update($id, Request $request)
@@ -142,7 +135,7 @@ class StudentsPaymentController extends Controller
                 }
             }
         } else {
-            ResponseMessage::unauthorized($permission);
+            return  ResponseMessage::unauthorized($permission);
         }
     }
 
@@ -160,7 +153,7 @@ class StudentsPaymentController extends Controller
                 return ResponseMessage::fail("Payment Record Doesn't Exist!");
             }
         } else {
-            ResponseMessage::unauthorized($permission);
+            return  ResponseMessage::unauthorized($permission);
         }
     }
 

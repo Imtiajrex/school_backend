@@ -19,7 +19,7 @@ class CreateStudentMessagesTable extends Migration
             $table->string("content");
             $table->unsignedBigInteger("student_id");
 
-            $table->foreign("student_id")->references("id")->on("students")->onDelete("cascade");
+            $table->foreign("student_id")->references("id")->on("class_has_students")->onDelete('cascade');
         });
     }
 

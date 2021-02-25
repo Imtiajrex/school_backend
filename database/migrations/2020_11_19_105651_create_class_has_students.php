@@ -19,6 +19,7 @@ class CreateClassHasStudents extends Migration
             $table->unsignedBigInteger("department_id");
             $table->unsignedBigInteger("session_id");
             $table->unsignedBigInteger("student_id");
+            $table->string("student_identifier");
             $table->integer("role");
 
 
@@ -27,7 +28,7 @@ class CreateClassHasStudents extends Migration
             $table->foreign("session_id")->references("id")->on("session")->onDelete("cascade");
             $table->foreign("student_id")->references("id")->on("students")->onDelete("cascade");
 
-            $table->index("role");
+            $table->unique("student_identifier");
         });
     }
 

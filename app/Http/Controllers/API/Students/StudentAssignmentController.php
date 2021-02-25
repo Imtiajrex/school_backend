@@ -33,22 +33,24 @@ class StudentAssignmentController extends Controller
             }
 
             if ($request->student_id) {
-                $student_id = Students::where("student_id", $request->student_id)->first();
-                if ($student_id)
-                    $query = ["class_has_students.student_id" => $student_id->id];
+                $query = ["class_has_students.id" => $request->student_id];
             }
 
-            if (count($query) != 0) {
-                $students =  ClassHasStudents::where($query)->leftJoin("class", "class_has_students.class_id", "=", "class.id")->leftJoin("session", "class_has_students.session_id", "=", "session.id")->leftJoin("department", "class_has_students.department_id", "=", "department.id")->leftJoin("students", "class_has_students.student_id", "=", "students.id")->orderBy("class_has_students.class_id", "desc")->orderBy("class_has_students.department_id", "desc")->orderBy("role", "asc");
+            $students = [];
 
+            if (count($query) > 0) {
+                $students = ClassHasStudents::where($query)->rightJoin("students", function ($join) {
+                    $join->on("students.id", '=', 'class_has_students.student_id');
+                })->leftJoin("class", "class_has_students.class_id", "=", "class.id")->leftJoin("session", "class_has_students.session_id", "=", "session.id")->leftJoin("department", "class_has_students.department_id", "=", "department.id")->orderBy("class_has_students.class_id", "desc")->orderBy("class_has_students.department_id", "desc")->orderBy("role", "asc");
+                
                 if ($request->phonebook)
-                    return $students->get(["class_has_students.*", "class.name as class", "session.*", "department.name as department", "students.student_name", "students.student_id as student_identifier", "students.primary_phone", "students.secondary_phone"]);
+                    return $students->get(["class_has_students.*", "class.name as class", "session.*", "department.name as department", "students.student_name", "class_has_students.student_identifier", "students.primary_phone", "students.secondary_phone"]);
                 else if ($request->student_options) {
-                    return $students->selectRaw('class_has_students.student_id as value,concat(students.student_id, " ",students.student_name) as text')->get();
+                    return $students->selectRaw('class_has_students.id as value,concat(class_has_students.student_identifier, " | ",students.student_name) as text')->get();
                 } else if ($request->all) {
                     return $students->get(["class_has_students.*", "class.name as class", "session.session", "department.name as department", "students.*"]);
                 } else
-                    return $students->get(["class_has_students.*", "class.name as class", "session.session", "department.name as department", "students.student_name", "students.student_id"]);
+                    return $students->get(["class_has_students.id","class_has_students.id as student_id", "class.name as class", "session.session", "department.name as department", "students.student_name", "class_has_students.student_identifier","class_has_students.role","class_has_students.session_id","class_has_students.class_id","class_has_students.department_id"]);
             }
         } else {
             return ResponseMessage::unauthorized($permission);
