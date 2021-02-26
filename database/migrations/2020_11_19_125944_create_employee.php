@@ -29,7 +29,7 @@ class CreateEmployee extends Migration
             $table->string("employee_secondary_phone", 25)->nullable();
             $table->string("employee_email")->nullable();
             $table->string("job_status");
-            $table->json("employee_extended_info")->default('[]');
+            $table->json("employee_extended_info")->nullable();
 
             $table->unique("employee_id");
         });
