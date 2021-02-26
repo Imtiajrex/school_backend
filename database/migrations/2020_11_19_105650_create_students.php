@@ -18,15 +18,15 @@ class CreateStudents extends Migration
             $table->string("student_name");
             $table->string("mother_name");
             $table->string("father_name");
-            $table->string("student_image")->default('');
+            $table->string("student_image")->nullable();
             $table->string("gender");
             $table->string("religion");
             $table->string("age");
             $table->string("primary_phone");
-            $table->string("secondary_phone")->default('');
-            $table->string("student_email")->default('');
+            $table->string("secondary_phone")->nullable();
+            $table->string("student_email")->nullable();
             $table->string("enrollment_status");
-            $table->json("extended_info")->default('{}');
+            $table->json("extended_info")->nullable();
         });
     }
 
