@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\FileUploader;
 use App\Http\Controllers\ResponseMessage;
 use App\Models\InstituteInfo;
 use Illuminate\Http\Request;
@@ -40,6 +41,17 @@ class InstituteInfoController extends Controller
                 $InstituteInfo->institute_facebook = $request->institute_facebook;
                 $InstituteInfo->institute_youtube = $request->institute_youtube;
                 $InstituteInfo->institute_address = $request->institute_address;
+
+
+                if ($request->hasFile('institute_logo')) {
+                    $image_file = FileUploader::upload($request->file('institute_logo'));
+
+                    if (array_key_exists('error', $image_file)) {
+                        return ResponseMessage::fail($image_file["error"]);
+                    } else if (array_key_exists('image_name', $image_file)) {
+                        $InstituteInfo->institute_logo = $image_file['image_name'];
+                    }
+                }
                 if ($InstituteInfo->save()) {
                     return ResponseMessage::success("Institute Info Updated!");
                 } else {
