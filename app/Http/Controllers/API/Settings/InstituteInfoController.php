@@ -25,9 +25,8 @@ class InstituteInfoController extends Controller
             $request->validate([
                 "institute_name" => 'required|string',
                 "institute_motto" => 'required|string',
-                "institute_shortform" => "required|string",
                 "institute_phonenumbers" => 'required|string',
-                "institute_email" => "required|string",
+                "institute_email" => "required|email",
                 "institute_facebook" => "required|string",
                 "institute_youtube" => "required|string",
                 "institute_address" => "required|string"
@@ -36,7 +35,6 @@ class InstituteInfoController extends Controller
             if ($InstituteInfo != null) {
                 $InstituteInfo->institute_name = $request->institute_name;
                 $InstituteInfo->institute_motto = $request->institute_motto;
-                $InstituteInfo->institute_shortform = $request->institute_shortform;
                 $InstituteInfo->institute_phonenumbers = $request->institute_phonenumbers;
                 $InstituteInfo->institute_email = $request->institute_email;
                 $InstituteInfo->institute_facebook = $request->institute_facebook;
