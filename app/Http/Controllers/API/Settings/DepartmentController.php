@@ -15,12 +15,12 @@ class DepartmentController extends Controller
     {
         $permission = "View Department";
         $user = $request->user();
-        if ($user->can($permission) || $user->user_type =="teacher" || $user->user_type =="student") {
+        if ($user->can($permission) || $user->user_type == "teacher" || $user->user_type == "student") {
             $query = [];
-            $depts=[];
+            $depts = [];
             if ($request->class_id != null && $request->session_id != null)
                 $query = ["class_id" => $request->class_id, "session_id" => $request->session_id];
-            if(count($query)>0)
+            if (count($query) > 0)
                 $depts = Department::where($query)->get();
             else
                 $depts = Department::all();
@@ -49,7 +49,7 @@ class DepartmentController extends Controller
                 "class_id" => "required|numeric",
                 "session_id" => "required|numeric"
             ]);
-            if (Department::where(["name" => $request->name])->first() == null) {
+            if (Department::where(["name" => $request->name, "class_id" => $request->class_id, "session_id" => $request->session_id])->first() == null) {
                 $department = new Department;
                 $department->name = $request->name;
                 $department->class_id = $request->class_id;

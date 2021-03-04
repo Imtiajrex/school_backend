@@ -18,7 +18,7 @@ class StudentsExtendedInfoController extends Controller
             $data = StudentsExtendedInfo::all();
             if ($request->use) {
                 foreach ($data as $record) {
-                    $unready_options = explode(',', $record->options);
+                    $unready_options = explode(',', json_decode($record->options));
                     $ready_options = [];
                     if (count($unready_options) > 0) {
                         foreach ($unready_options as $option) {
@@ -50,7 +50,7 @@ class StudentsExtendedInfoController extends Controller
 
                 $students_extended_info->type = $request->type;
                 if ($request->options) {
-                    $students_extended_info->options = $request->options;
+                    $students_extended_info->options = json_encode($request->options);
                 }
                 $students_extended_info->placeholder = $request->placeholder;
                 $students_extended_info->name = $name;

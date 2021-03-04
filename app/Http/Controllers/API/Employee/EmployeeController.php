@@ -54,9 +54,6 @@ class EmployeeController extends Controller
             else
                 $employees = Employee::all();
 
-            foreach ($employees as $employee) {
-                $employee['employee_extended_info'] = json_decode($employee["employee_extended_info"]);
-            }
             return $employees;
         } else {
             return ResponseMessage::unauthorized($permission);

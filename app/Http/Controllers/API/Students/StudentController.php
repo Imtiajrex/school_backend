@@ -62,9 +62,6 @@ class StudentController extends Controller
                     ["class_has_students.*", "class_has_students.id as student_id", "class.name as class", "session.session", "department.name as department", "students.*"]
                 );
             }
-            foreach ($students as $student) {
-                $student["extended_info"] = json_decode($student->extended_info);
-            }
             return $students;
         } else {
             return ResponseMessage::unauthorized($permission);
@@ -110,7 +107,7 @@ class StudentController extends Controller
             }
 
             if ($request->extended_info != null) {
-                $students->extended_info = json_encode($request->extended_info);
+                $students->extended_info = $request->extended_info;
             }
 
             $students->enrollment_status = 'student';
