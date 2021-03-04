@@ -12,9 +12,9 @@ class InstituteInfoController extends Controller
 {
     public function index(Request $request)
     {
-        return InstituteInfo::get();
         if ($request->home)
             return InstituteInfo::first();
+        return InstituteInfo::get();
     }
 
 
