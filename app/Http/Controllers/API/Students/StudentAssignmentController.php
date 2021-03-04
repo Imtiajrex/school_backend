@@ -42,7 +42,7 @@ class StudentAssignmentController extends Controller
                 $students = ClassHasStudents::where($query)->rightJoin("students", function ($join) {
                     $join->on("students.id", '=', 'class_has_students.student_id');
                 })->leftJoin("class", "class_has_students.class_id", "=", "class.id")->leftJoin("session", "class_has_students.session_id", "=", "session.id")->leftJoin("department", "class_has_students.department_id", "=", "department.id")->orderBy("class_has_students.class_id", "desc")->orderBy("class_has_students.department_id", "desc")->orderBy("role", "asc");
-                
+
                 if ($request->phonebook)
                     return $students->get(["class_has_students.*", "class.name as class", "session.*", "department.name as department", "students.student_name", "class_has_students.student_identifier", "students.primary_phone", "students.secondary_phone"]);
                 else if ($request->student_options) {
@@ -50,7 +50,7 @@ class StudentAssignmentController extends Controller
                 } else if ($request->all) {
                     return $students->get(["class_has_students.*", "class.name as class", "session.session", "department.name as department", "students.*"]);
                 } else
-                    return $students->get(["class_has_students.id","class_has_students.id as student_id", "class.name as class", "session.session", "department.name as department", "students.student_name", "class_has_students.student_identifier","class_has_students.role","class_has_students.session_id","class_has_students.class_id","class_has_students.department_id"]);
+                    return $students->get(["class_has_students.id", "class_has_students.id as student_id", "class.name as class", "session.session", "department.name as department", "students.student_name", "class_has_students.student_identifier", "class_has_students.role", "class_has_students.session_id", "class_has_students.class_id", "class_has_students.department_id"]);
             }
         } else {
             return ResponseMessage::unauthorized($permission);
@@ -66,7 +66,7 @@ class StudentAssignmentController extends Controller
                 "class_id" => "required|numeric",
                 "department_id" => "required|numeric",
                 "session_id" => "required|numeric",
-                "student_id" => "required|string",
+                "student_id" => "required|numeric",
                 "role" => "required|numeric",
             ]);
 
@@ -85,21 +85,29 @@ class StudentAssignmentController extends Controller
 
             if (Session::find($session_id) == null)
                 return ResponseMessage::fail("Session Doesn't Exist!");
-            $student = Students::where("student_id", $student_id)->first();
+            $student = ClassHasStudents::find($student_id);
             if ($student == null)
                 return ResponseMessage::fail("Student Doesn't Exist!");
-            $student_id = $student->id;
-            $ClassHasStudents = ClassHasStudents::where(["session_id" => $session_id, "class_id" => $class_id, "department_id" => $department_id, "student_id" => $student_id])->first();
-
-            if ($ClassHasStudents != null)
-                return ResponseMessage::success("This Student is Already Assigned In This Class!");
+            $student_id = $student->student_id;
 
             $assigned_student = new ClassHasStudents;
+
+
+            $session = Session::find($session_id);
+            $current_year = $session->session - 2000;
+            $std_cls = $class_id < 10 ? "0" . $class_id : $class_id;
+            $total_students = ClassHasStudents::where("student_identifier", "like", "STD" . $current_year . $std_cls . "%")->max("student_identifier");
+            $number = (int)(str_replace("STD", "", $total_students)) + 1;
+            $number = $number > (int)($current_year . $std_cls . '001') ? $number : (int)($current_year . $std_cls . '001');
+            $std_id = "STD" . $number;
+
 
             $assigned_student->class_id = $class_id;
             $assigned_student->department_id = $department_id;
             $assigned_student->session_id = $session_id;
             $assigned_student->student_id = $student_id;
+            $assigned_student->student_identifier = $std_id;
+
             $assigned_student->role = $role;
 
             if ($assigned_student->save()) {

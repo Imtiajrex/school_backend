@@ -185,7 +185,7 @@ class StudentsPaymentController extends Controller
     {
         $payment_arr = [];
         $accounts_arr = [];
-        $student = Students::find($student_id);
+        $student = ClassHasStudents::where("id", $student_id)->leftJoin("students", "students.id", '=', 'class_has_students.student_id')->get(["student_identifier", "student_name"]);
         $student_name = $student->student_name;
         foreach ($payments as $payment) {
             $payment_category = $payment["payment_category"];
@@ -194,7 +194,7 @@ class StudentsPaymentController extends Controller
             $paid_amount = $payment["paid_amount"];
             $payment_info = $payment_info == null ? '' : $payment_info;
             array_push($payment_arr, ["session_id" => $session_id, "student_id" => $student_id, "date" => $date, "payment_category" => $payment_category, "payment_info" => $payment_info, "payment_amount" => $payment_amount, "paid_amount" => $paid_amount, "group_id" => $receipt_id]);
-            array_push($accounts_arr, ["balance_form" => "Cash", "entry_type" => "Credit", "entry_category" => "Student Payment", "entry_info" => "Receipt ID: " . $receipt_id . "\nStudent ID: " . $student->student_id . "\nStudent Name: " . $student_name . "\nPayment Info: " . $payment_category . " - " . $payment_info, "amount" => $paid_amount, "date" => $date]);
+            array_push($accounts_arr, ["balance_form" => "Cash", "entry_type" => "Credit", "entry_category" => "Student Payment", "entry_info" => "Receipt ID: " . $receipt_id . "\nStudent ID: " . $student->student_identifier . "\nStudent Name: " . $student_name . "\nPayment Info: " . $payment_category . " - " . $payment_info, "amount" => $paid_amount, "date" => $date]);
         }
         return [$payment_arr, $accounts_arr];
     }
