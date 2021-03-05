@@ -185,7 +185,8 @@ class StudentsPaymentController extends Controller
     {
         $payment_arr = [];
         $accounts_arr = [];
-        $student = ClassHasStudents::where("class_has_students.id", $student_id)->leftJoin("students", "students.id", '=', 'class_has_students.student_id')->get(["student_identifier", "student_name"]);
+        $student = ClassHasStudents::where("class_has_students.id", $student_id)->leftJoin("students", "students.id", '=', 'class_has_students.student_id')->get(["class_has_students.student_identifier", "students.student_name"]);
+        print_r($student);
         $student_name = $student->student_name;
         foreach ($payments as $payment) {
             $payment_category = $payment["payment_category"];
