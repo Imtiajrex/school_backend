@@ -29,7 +29,7 @@ class StudentsPaymentController extends Controller
                 $students_payment =  StudentsPayment::where(["students_payment.student_id" => $student_id]);
                 $students_payment = $students_payment->leftJoin("class_has_students", "class_has_students.id", "=", "students_payment.student_id");
                 $students_payment = $students_payment->leftJoin("students", "students.id", "=", "class_has_students.student_id");
-                return $students_payment->get();
+                return $students_payment->get(["students_payment.id", "students.student_name", "students_payment.*"]);
             }
         } else {
             return ResponseMessage::unauthorized($permission);
