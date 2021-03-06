@@ -119,7 +119,11 @@ class StudentsPaymentController extends Controller
                 $payment->paid_amount = $paid_amount;
                 if ($payment->save()) {
                     $due = StudentsPaymentAccount::where("payment_id", $id)->first();
-                    Accounts::where("entry_category", "like", "%Student Payment%")->where("payment_id", $id)->update(["entry_category" => "Student Payment[Edited]"]);
+                    $account =  Accounts::where("payment_id", $id);
+                    $acc = $account->first();
+                    if ($acc != null) {
+                        $account->update(["entry_category" => $acc->entry_category . "[Edited]"]);
+                    }
                     if ($due != null) {
                         if ($payment_amount > $paid_amount)
                             $due->amount = $payment_amount - $paid_amount;
@@ -146,7 +150,11 @@ class StudentsPaymentController extends Controller
         if ($user->can($permission)) {
             if (StudentsPayment::find($id) != null) {
                 if (StudentsPayment::destroy($id)) {
-                    Accounts::where("entry_category", "like", "%Student Payment%")->where("payment_id", $id)->update(["entry_category" => "Student Payment[Deleted]"]);
+                    $account =  Accounts::where("payment_id", $id);
+                    $acc = $account->first();
+                    if ($acc != null) {
+                        $account->update(["entry_category" => $acc->entry_category . "[Deleted]"]);
+                    }
                     return ResponseMessage::success("Payment Record Deleted!");
                 }
             } else {
@@ -195,7 +203,7 @@ class StudentsPaymentController extends Controller
             $paid_amount = $payment["paid_amount"];
             $payment_info = $payment_info == null ? '' : $payment_info;
             array_push($payment_arr, ["session_id" => $session_id, "student_id" => $student_id, "date" => $date, "payment_category" => $payment_category, "payment_info" => $payment_info, "payment_amount" => $payment_amount, "paid_amount" => $paid_amount, "group_id" => $receipt_id]);
-            array_push($accounts_arr, ["balance_form" => "Cash", "entry_type" => "Credit", "entry_category" => "Student Payment", "entry_info" => "Receipt ID: " . $receipt_id . "\nStudent ID: " . $student->student_identifier . "\nStudent Name: " . $student_name . "\nPayment Info: " . $payment_category . " - " . $payment_info, "amount" => $paid_amount, "date" => $date]);
+            array_push($accounts_arr, ["balance_form" => "Cash", "entry_type" => "Credit", "entry_category" =>  $payment_category . " - " . $payment_info, "entry_info" => "ID: " . $student->student_identifier . " Name: " . $student_name, "amount" => $paid_amount, "date" => $date]);
         }
         return [$payment_arr, $accounts_arr];
     }
