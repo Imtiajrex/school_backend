@@ -92,7 +92,7 @@ class DueController extends Controller
             $student_id = $request->student_id;
 
 
-            $receipt_id = StudentsPaymentReceipt::count() + 1;
+            $receipt_id = StudentsPaymentReceipt::max('receipt_id') + 1;
 
             $query_datas = $this->paymentArrayConverter($payments, $receipt_id, $student_id, $session_id, $date);
             $payment_data = $query_datas[0];
@@ -142,7 +142,8 @@ class DueController extends Controller
         $due_update_arr = [];
         $due_delete_arr = [];
         $accounts_arr = [];
-        $student = Students::find($student_id);
+
+        $student = ClassHasStudents::where("class_has_students.id", $student_id)->leftJoin("students", "students.id", '=', 'class_has_students.student_id')->first();
         $student_name = $student->student_name;
         foreach ($payments as $payment) {
             $payment_category = $payment["payment_category"];
@@ -163,7 +164,7 @@ class DueController extends Controller
                     array_push($due_delete_arr, $due_id);
                 }
             }
-            array_push($accounts_arr, ["balance_form" => "Cash", "entry_type" => "Credit", "entry_category" => "Student Payment", "entry_info" => "Receipt ID: " . $receipt_id . "\nStudent ID: " . $student_id . "\nStudent Name: " . $student_name . "\nPayment Info: " . $payment_category . " - " . $payment_info, "amount" => $paid_amount, "date" => $date]);
+            array_push($accounts_arr, ["balance_form" => "Cash", "entry_type" => "Credit", "entry_category" =>  $payment_category . " - " . $payment_info, "entry_info" => "ID: " . $student->student_identifier . " Name: " . $student_name, "amount" => $paid_amount, "date" => $date]);
         }
 
         return [$payment_arr, $due_delete_arr, $due_update_arr, $accounts_arr];
