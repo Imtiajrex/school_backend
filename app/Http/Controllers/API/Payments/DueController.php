@@ -92,7 +92,7 @@ class DueController extends Controller
             $student_id = $request->student_id;
 
 
-            $receipt_id = StudentsPaymentReceipt::max('receipt_id') + 1;
+            $receipt_id = StudentsPaymentReceipt::max('id') + 1;
 
             $query_datas = $this->paymentArrayConverter($payments, $receipt_id, $student_id, $session_id, $date);
             $payment_data = $query_datas[0];
