@@ -18,7 +18,7 @@ class TeachersExtendedInfoController extends Controller
             $data = TeachersExtendedInfo::all();
             if ($request->use) {
                 foreach ($data as $record) {
-                    $unready_options = explode(',', $record->options);
+                    $unready_options = explode(',', json_decode($record->options));
                     $ready_options = [];
                     if (count($unready_options) > 0) {
                         foreach ($unready_options as $option) {
@@ -45,12 +45,12 @@ class TeachersExtendedInfoController extends Controller
                 "placeholder" => "required|string",
             ]);
 
-            $name = str_replace(" ","_",strtolower($request->placeholder));
+            $name = str_replace(" ", "_", strtolower($request->placeholder));
             if (TeachersExtendedInfo::where("name", $name)->first() == null) {
                 $teachers_extended_info = new TeachersExtendedInfo;
                 $teachers_extended_info->type = $request->type;
                 if ($request->options) {
-                    $teachers_extended_info->options = $request->options;
+                    $teachers_extended_info->options = json_decode($request->options);
                 }
                 $teachers_extended_info->placeholder = $request->placeholder;
                 $teachers_extended_info->name = $name;
@@ -78,7 +78,7 @@ class TeachersExtendedInfoController extends Controller
             ]);
             $teachers_extended_info = TeachersExtendedInfo::find($id);
             if ($teachers_extended_info != null) {
-                $name = str_replace(" ","_",strtolower($request->placeholder));
+                $name = str_replace(" ", "_", strtolower($request->placeholder));
                 if (TeachersExtendedInfo::where("name", $name)->first() == null) {
                     $teachers_extended_info->name = $request->name;
                     $teachers_extended_info->type = $request->type;
