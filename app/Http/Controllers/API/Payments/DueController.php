@@ -91,8 +91,8 @@ class DueController extends Controller
 
             $student_id = $request->student_id;
 
-
-            $receipt_id = StudentsPaymentReceipt::max('id') + 1;
+            $max_rec = StudentsPaymentReceipt::max('id');
+            $receipt_id = $max_rec == null ? 0 : $max_rec + 1;
 
             $query_datas = $this->paymentArrayConverter($payments, $receipt_id, $student_id, $session_id, $date);
             $payment_data = $query_datas[0];
@@ -164,7 +164,7 @@ class DueController extends Controller
                     array_push($due_delete_arr, $due_id);
                 }
             }
-            array_push($accounts_arr, ["balance_form" => "Cash", "entry_type" => "Credit", "entry_category" =>  $payment_category . " - " . $payment_info, "entry_info" => "ID: " . $student->student_identifier . " Name: " . $student_name, "amount" => $paid_amount, "date" => $date]);
+            array_push($accounts_arr, ["balance_form" => "Cash", "entry_type" => "Credit", "entry_category" => "'" . $payment_category . " - " . $payment_info . "'", "entry_info" => "'ID: " . $student->student_identifier . " Name: " . $student_name . "'", "amount" => $paid_amount, "date" => $date, "payment_id" => $payment_id]);
         }
 
         return [$payment_arr, $due_delete_arr, $due_update_arr, $accounts_arr];

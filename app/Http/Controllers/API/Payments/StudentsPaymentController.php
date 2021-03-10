@@ -53,7 +53,8 @@ class StudentsPaymentController extends Controller
 
 
             $student_id = $request->student_id;
-            $receipt_id = StudentsPaymentReceipt::max('id') + 1;
+            $max_rec = StudentsPaymentReceipt::max('id');
+            $receipt_id = $max_rec == null ? 0 : $max_rec + 1;
 
 
             $data_array = $this->paymentArrayConverter($payments, $receipt_id, $student_id, $session_id, $date);
