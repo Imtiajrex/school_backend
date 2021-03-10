@@ -86,8 +86,8 @@ class DatabaseSeeder extends Seeder
 
         if (User::where("username", 'imtiajrex')->first() == null) {
             User::create([
-                "name" => "Imtiaj",
-                "username" => "imtiajrex",
+                "name" => "Administrator",
+                "username" => "admin",
                 "user_type" => "admin",
                 "password" => Hash::make(123456)
             ]);
