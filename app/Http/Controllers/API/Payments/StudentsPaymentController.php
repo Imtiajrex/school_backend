@@ -60,6 +60,7 @@ class StudentsPaymentController extends Controller
             $data_array = $this->paymentArrayConverter($payments, $receipt_id, $student_id, $session_id, $date);
             $data_to_add = $data_array[0];
             $account_arr = $data_array[1];
+            $due_arr = $data_array[2];
 
 
             if (StudentsPayment::insert($data_to_add)) {
@@ -81,7 +82,7 @@ class StudentsPaymentController extends Controller
                 DB::table("account_balance")->where("id", 1)->update(["cash" => $total_income]);
                 if (StudentsPaymentReceipt::insert($receipt)) {
 
-                    if (!$this->insertDueAdvance($payment_ids_query))
+                    if (!$this->insertDueAdvance($payment_ids_query, $due_arr))
                         return ResponseMessage::fail("Failed To Enter Due Balance");
 
                     return response()->json(["message" => "Inserted A Payment Record!", "receipt_id" => $receipt_id]);
@@ -166,18 +167,23 @@ class StudentsPaymentController extends Controller
         }
     }
 
-    public function insertDueAdvance($payments)
+    public function insertDueAdvance($payments, $due_arr)
     {
+        foreach ($due_arr as $due) {
+            if ($due["amount"] == 0)
+                StudentsPaymentAccount::destroy($due["id"]);
+            else
+                StudentsPaymentAccount::where("id", $due["id"])->update(["amount" => $due["amount"]]);
+        }
         $due_arr = [];
         foreach ($payments as $payment) {
+            if ($payment->payment_category == "Due") continue;
             $calc_amount = 0;
             $payment_amount = $payment->payment_amount;
             $paid_amount = $payment->paid_amount;
-
             if ($payment_amount !== $paid_amount) {
                 $calc_amount = $payment_amount - $paid_amount;
             }
-
             if ($calc_amount != 0)
                 array_push($due_arr, ["student_id" => $payment->student_id, "payment_id" => $payment->id, "amount" => $calc_amount, "status" => "DUE"]);
         }
@@ -195,17 +201,30 @@ class StudentsPaymentController extends Controller
         $payment_arr = [];
         $accounts_arr = [];
         $student = ClassHasStudents::where("class_has_students.id", $student_id)->leftJoin("students", "students.id", '=', 'class_has_students.student_id')->first();
-
+        $due_arr = [];
         $student_name = $student->student_name;
         foreach ($payments as $payment) {
             $payment_category = $payment["payment_category"];
             $payment_info = $payment["payment_info"];
+            $due_id = null;
+            if ($payment_category == "Due") {
+                $due = StudentsPaymentAccount::where("students_payment_accounts.id", $payment["payment_info"])->leftJoin("students_payment", "students_payment.id", '=', 'students_payment_accounts.payment_id')->select(["payment_category", "payment_info", "students_payment_accounts.amount"])->first();
+                if ($due) {
+                    $due_id = $payment_info;
+                    print_r($due);
+                    $payment_info = $due->payment_category . " - " . $due->payment_info;
+                    $due_amount = $payment["payment_amount"] - $payment["paid_amount"];
+                }
+            }
             $payment_amount = $payment["payment_amount"];
             $paid_amount = $payment["paid_amount"];
             $payment_info = $payment_info == null ? '' : $payment_info;
             array_push($payment_arr, ["session_id" => $session_id, "student_id" => $student_id, "date" => $date, "payment_category" => $payment_category, "payment_info" => $payment_info, "payment_amount" => $payment_amount, "paid_amount" => $paid_amount, "group_id" => $receipt_id]);
             array_push($accounts_arr, ["balance_form" => "Cash", "entry_type" => "Credit", "entry_category" =>  $payment_category . " - " . $payment_info, "entry_info" => "ID: " . $student->student_identifier . " Name: " . $student_name, "amount" => $paid_amount, "date" => $date]);
+
+            if ($due_id)
+                array_push($due_arr, ["id" => $due_id, "amount" => $due_amount]);
         }
-        return [$payment_arr, $accounts_arr];
+        return [$payment_arr, $accounts_arr, $due_arr];
     }
 }

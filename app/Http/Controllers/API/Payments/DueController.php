@@ -27,7 +27,11 @@ class DueController extends Controller
                 $student_id = $request->student_id;
             }
             if ($student_id)
-                return StudentsPaymentAccount::where("students_payment_accounts.student_id", $student_id)->leftJoin("class_has_students", "students_payment_accounts.student_id", "=", "class_has_students.id")->leftJoin("students", "class_has_students.student_id", "=", "students.id")->leftJoin("students_payment", "students_payment_accounts.payment_id", "=", "students_payment.id")->leftJoin("session", "class_has_students.session_id", "=", "session.id")->leftJoin("class", "class.id", "=", 'class_has_students.class_id')->leftJoin("department", "department.id", "=", 'class_has_students.department_id')->get(['class.name as class', 'department.name as department', 'students_payment_accounts.amount', 'class_has_students.id as student_id', 'class_has_students.session_id', 'class_has_students.student_identifier', 'students.student_name', 'session.session', 'students_payment.payment_category', 'students_payment.payment_info', 'students_payment_accounts.id', 'students_payment_accounts.payment_id',]);
+                $dues = StudentsPaymentAccount::where("students_payment_accounts.student_id", $student_id)->leftJoin("class_has_students", "students_payment_accounts.student_id", "=", "class_has_students.id")->leftJoin("students", "class_has_students.student_id", "=", "students.id")->leftJoin("students_payment", "students_payment_accounts.payment_id", "=", "students_payment.id")->leftJoin("session", "class_has_students.session_id", "=", "session.id")->leftJoin("class", "class.id", "=", 'class_has_students.class_id')->leftJoin("department", "department.id", "=", 'class_has_students.department_id');
+            if ($request->options) {
+                return $dues->selectRaw('concat(students_payment.payment_category," ",students_payment.payment_info) as text,students_payment_accounts.id as value, students_payment_accounts.amount')->get();
+            }
+            return $dues->get(['class.name as class', 'department.name as department', 'students_payment_accounts.amount', 'class_has_students.id as student_id', 'class_has_students.session_id', 'class_has_students.student_identifier', 'students.student_name', 'session.session', 'students_payment.payment_category', 'students_payment.payment_info', 'students_payment_accounts.id', 'students_payment_accounts.payment_id',]);
         } else {
             return ResponseMessage::unauthorized($permission);
         }
