@@ -20,7 +20,7 @@ class MarksController extends Controller
     {
         $user = $request->user();
         $permission = "View Marks";
-        if ($user->can($permission) || $user->user_type == "teacher" || ($user->user_type =="student"&& $user->username==$request->student_id)) {
+        if ($user->can($permission) || $user->user_type == "teacher" || ($user->user_type == "student" && $user->username == $request->student_id)) {
             $request->validate([
                 "exam_id" => "required|numeric"
             ]);
@@ -33,7 +33,7 @@ class MarksController extends Controller
                 $marks = Marks::where([[$query]]);
                 $marks = $marks->leftJoin("class_has_students", "class_has_students.id", "=", "marks.student_id");
                 $marks = $marks->leftJoin("students", "students.id", "=", "class_has_students.student_id");
-                $marks = $marks->orderBy("subject_id")->orderBy("class_has_students.role",'asc');
+                $marks = $marks->orderBy("subject_id")->orderBy("class_has_students.role", 'asc');
                 $marks = $marks->get(["class_has_students.role", "class_has_students.student_identifier", "students.student_name", "marks.*"]);
                 return $marks;
             }
@@ -46,7 +46,7 @@ class MarksController extends Controller
 
         $user = $request->user();
         $permission = "View Marks";
-        if ($user->can($permission) || $user->user_type == "teacher" || ($user->user_type =="student"&& $user->username==$request->student_id)) {
+        if ($user->can($permission) || $user->user_type == "teacher" || ($user->user_type == "student" && $user->username == $request->student_id)) {
             $request->validate([
                 "class_id" => "required|numeric",
                 "session_id" => "required|numeric",
@@ -71,7 +71,7 @@ class MarksController extends Controller
     {
         $user = $request->user();
         $permission = "View Marks";
-        if ($user->can($permission) || $user->user_type == "teacher" || ($user->user_type =="student"&& $user->username==$request->student_id)) {
+        if ($user->can($permission) || $user->user_type == "teacher" || ($user->user_type == "student" && $user->username == $request->student_id)) {
             $request->validate([
                 "exam_id" => "required|numeric",
             ]);
@@ -123,6 +123,8 @@ class MarksController extends Controller
                 return ResponseMessage::fail("Subject Doesn't Exist!");
             $marks = [];
             $gpa_arr = Gpa::get();
+            $to_find = [];
+            $to_update = [];
             foreach ($mark_data as $m_d) {
                 $m_d["exam_id"] = $exam_id;
                 $m_d["subject_id"] = $subject_id;
@@ -136,15 +138,19 @@ class MarksController extends Controller
                 }
                 $m_d["gpa"] = $gpa;
                 $m_d["marks"] = json_encode($m_d["marks"]);
-                array_push($marks, $m_d);
+                array_push($to_find, ["exam_id" => $exam_id, "student_id" => $m_d["student_id"], "subject_id" => $subject_id]);
+                array_push($to_update, ["absent" => $m_d["absent"], "total_mark" => $m_d["total_mark"], "gpa" => $gpa, "subject_type" => $m_d["subject_type"], "marks" => $m_d["marks"]]);
+                // array_push($marks, $m_d);
+            }
+            $i = 0;
+            while ($i < count($to_find)) {
+
+                Marks::updateOrInsert($to_find[$i], $to_update[$i]);
+                $i++;
             }
 
-            if (Marks::upsert($marks, ["student_id", "exam_id", "subject_id"], ["absent", "total_mark", "gpa", "subject_type", "marks"])) {
-                DB::table("marks_structure")->upsert(["id" => $request->mark_structure_id, "exam_id" => $exam_id, "subject_id" => $subject_id, "total_exam_mark" => $request->total_exam_mark, "structure" => $mark_structure], ["exam_id", "subject_id"], ["structure"]);
-                return ResponseMessage::success("Marks Added!");
-            } else {
-                return ResponseMessage::fail("Failed To Add Marks!");
-            }
+            DB::table("marks_structure")->upsert(["id" => $request->mark_structure_id, "exam_id" => $exam_id, "subject_id" => $subject_id, "total_exam_mark" => $request->total_exam_mark, "structure" => $mark_structure], ["id", "exam_id", "subject_id"], ["structure"]);
+            return ResponseMessage::success("Marks Added!");
         }
     }
 
