@@ -61,7 +61,7 @@ class MarksController extends Controller
             $students = $students->leftJoin("students", "class_has_students.student_id", '=', 'students.id');
             $students = $students->leftJoin("marks", function ($join) use ($exam_id, $subject_id) {
                 $join->on("class_has_students.id", "=", "marks.student_id")->where(["exam_id" => $exam_id, "subject_id" => $subject_id]);
-            });
+            })->orderBy("role", 'asc');
             return $students->get(["students.student_name", "class_has_students.student_identifier", "marks.marks", "class_has_students.id as student_id", "marks.id"]);
         } else {
             return ResponseMessage::unauthorized($permission);
