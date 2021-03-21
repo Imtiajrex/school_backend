@@ -109,7 +109,7 @@ class FetchAttendance extends Command
 
                 foreach ($employees as $employee) {
 
-                    $attendance_time = $student_attendance_time[$employee->employee_id]["access_time"];
+                    $attendance_time = $employee_attendance_time[$employee->employee_id]["access_time"];
                     $attendance_time = explode(":", $attendance_time);
                     $hour = $attendance_time[0] < 10 ? "0" . $attendance_time[0] : $attendance_time[0];
                     $attendance_time = $hour . ":" . $attendance_time[1] . ":" . $attendance_time[2];
