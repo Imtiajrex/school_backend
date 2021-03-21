@@ -45,7 +45,7 @@ class FetchAttendance extends Command
     public function handle()
     {
         $school_info = DB::table("institute_info")->first();
-        $employee_prefix = "EMP";
+        $employee_prefix = "T";
         $student_prefix = "STD";
         $prefix = $school_info->institute_shortform;
         $sms_template = DB::table("sms_template")->where("title", "student_attendance_in")->first();
