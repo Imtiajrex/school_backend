@@ -61,8 +61,8 @@ class FetchAttendance extends Command
             "auth_user" =>  env("ATTENDANCE_DEVICE_USER"),
             "auth_code" => env("ATTENDANCE_DEVICE_TOKEN"),
             "device_id" =>  $school_info->attendance_device,
-            "start_date" => date('Y-m-d'),
-            "end_date" => date('Y-m-d'),
+            "start_date" => '2020-01-01',
+            "end_date" => '2021-03-22',
             "start_time" => "00:00:00",
             "end_time" => "23:59:59"
         );
