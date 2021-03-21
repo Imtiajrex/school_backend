@@ -105,7 +105,7 @@ class FetchAttendance extends Command
             $student_attendance = [];
             $sms_data = [];
             if (count($employee_ids) > 0) {
-                $employees = DB::table('employee')->whereIn("employee_id", $employee_ids)->get(["id", "employee_id"]);
+                $employees = DB::table('employee')->whereIn("employee_id", $employee_ids)->leftJoin('employee_attendance', 'employee_attendance.employee_id', '=', 'employee.id')->selectRaw('"employee.id", "employee.employee_id","max(students_attendance.access_time) as access_time"')->get();
 
                 foreach ($employees as $employee) {
 
