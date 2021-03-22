@@ -34,7 +34,7 @@ class EmployeeAttendanceController extends Controller
             if (count($query) != 0) {
                 $start_time = EmployeeAttendanceTime::find(1)->start_time;
 
-                $employee =  Employee::where($query);
+                $employee =  Employee::where("job_status", 'employee')->where($query);
                 $employee = $employee->leftJoin("employee_attendance", function ($join) use ($date) {
                     $join->on("employee_attendance.employee_id", "=", "employee.id")->where("employee_attendance.date", $date);
                 });
@@ -70,7 +70,7 @@ class EmployeeAttendanceController extends Controller
             }
             if (count($query) != 0) {
                 $start_time = EmployeeAttendanceTime::find(1)->start_time;
-                $employee =  Employee::where($query)->get();
+                $employee =  Employee::where("job_status", 'employee')->where($query)->get();
                 $data = [];
                 foreach ($employee as $employee) {
                     $em_att = EmployeeAttendance::where('employee_id', $employee->id)->whereYear('date', '=', $year)->whereMonth('date', '=', $request->month);
@@ -107,7 +107,7 @@ class EmployeeAttendanceController extends Controller
             ]);
             if ($request->absent) {
 
-                if (EmployeeAttendance::whereIn("employee_id", $request->ids)->where("date", $request->date)->where("manual", true)->delete()) {
+                if (EmployeeAttendance::where("job_status", 'employee')->whereIn("employee_id", $request->ids)->where("date", $request->date)->where("manual", true)->delete()) {
                     return ResponseMessage::success("Student Attendance Manually Absent Assigned!");
                 } else {
                     return ResponseMessage::fail("Couldn't Manually Assign Absent Student Attendance!");
@@ -141,7 +141,7 @@ class EmployeeAttendanceController extends Controller
                 $query["employee_type"] = $request->employee_type;
             }
             if (count($query) > 0) {
-                $employee = Employee::where($query)->leftJoin("employee_attendance",  function ($join) use ($from, $to) {
+                $employee = Employee::where("job_status", 'employee')->where($query)->leftJoin("employee_attendance",  function ($join) use ($from, $to) {
                     $join->on('employee_attendance.employee_id', '=', 'employee.id')->where("employee_attendance.manual", true)->whereBetween("employee_attendance.date", [$from, $to]);
                 });
                 return $employee->selectRaw("employee.employee_name,case when employee_attendance.access_time is not null then 'Present' else 'Absent' end as attendance_status,date,employee.employee_id,employee.id")->get();

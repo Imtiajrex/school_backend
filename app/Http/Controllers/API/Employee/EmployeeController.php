@@ -21,9 +21,9 @@ class EmployeeController extends Controller
                 $query["employee_type"] = $request->employee_type;
 
             if ($request->limit)
-                return Employee::where($query)->orderBy("id", "asc")->take(5)->get();
+                return Employee::where("job_status", 'employee')->where($query)->orderBy("id", "asc")->take(5)->get();
             else
-                return Employee::where($query)->orderBy("id", "asc")->get();
+                return Employee::where("job_status", 'employee')->where($query)->orderBy("id", "asc")->get();
         }
 
         $user = $request->user();
@@ -35,7 +35,7 @@ class EmployeeController extends Controller
                 if ($request->employee_type) {
                     $query["employee_type"] = $request->employee_type;
                 }
-                return Employee::where($query)->selectRaw('employee.id as value,concat(employee.employee_id, " ",employee.employee_name) as text')->get();
+                return Employee::where("job_status", 'employee')->where($query)->selectRaw('employee.id as value,concat(employee.employee_id, " ",employee.employee_name) as text')->get();
             }
             if ($request->religion != null && $request->religion != -1)
                 $query["employee_religion"] = $request->religion;
@@ -48,11 +48,11 @@ class EmployeeController extends Controller
 
 
             if ($request->employee_id != null && strlen($request->employee_id) > 0)
-                $employees = Employee::where("employee_id", "like", ($request->employee_id) . "%")->get();
+                $employees = Employee::where("job_status", 'employee')->where("employee_id", "like", ($request->employee_id) . "%")->get();
             else if (count($query) > 0)
-                $employees = Employee::where($query)->get();
+                $employees = Employee::where("job_status", 'employee')->where($query)->get();
             else
-                $employees = Employee::all();
+                $employees = Employee::where("job_status", 'employee')->get();
 
             return $employees;
         } else {
