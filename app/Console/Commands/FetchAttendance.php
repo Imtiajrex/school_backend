@@ -105,10 +105,11 @@ class FetchAttendance extends Command
             $student_attendance = [];
             $sms_data = [];
             if (count($employee_ids) > 0) {
-                $employees = DB::table('employee')->whereIn("employee.employee_id", $employee_ids)->leftJoin('employee_attendance', 'employee_attendance.employee_id', '=', 'employee.id')->selectRaw('"employee.id", "employee.employee_id","max(employee_attendance.access_time) as access_time"')->get();
+                $employees = DB::table('employee')->whereIn("employee.employee_id", $employee_ids)->leftJoin('employee_attendance', function ($join) {
+                    $join->on('employee_attendance.employee_id', '=', 'employee.id')->distinct();
+                })->selectRaw('employee.id, employee.employee_id,max(employee_attendance.access_time) as access_time')->get();
 
                 foreach ($employees as $employee) {
-
                     $attendance_time = $employee_attendance_time[$employee->employee_id]["access_time"];
                     $attendance_time = explode(":", $attendance_time);
                     $hour = $attendance_time[0] < 10 ? "0" . $attendance_time[0] : $attendance_time[0];
@@ -117,7 +118,7 @@ class FetchAttendance extends Command
                     if ($employee->access_time == null) {
                         array_push($employee_attendance, [
                             "employee_id" => $employee->id,
-                            "access_time" => $employee_attendance_time[$employee->employee_id],
+                            "access_time" => $attendance_time,
                             "date" => $employee_attendance_time[$employee->employee_id]["date"]
                         ]);
                     } else {
