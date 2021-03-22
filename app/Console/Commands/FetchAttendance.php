@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Jobs\SendSMSJob;
+use App\Models\ClassHasStudents;
+use App\Models\Employee;
 use App\Models\EmployeeAttendance;
 use App\Models\StudentsAttendance;
 use Carbon\Carbon;
@@ -61,8 +63,8 @@ class FetchAttendance extends Command
             "auth_user" =>  env("ATTENDANCE_DEVICE_USER"),
             "auth_code" => env("ATTENDANCE_DEVICE_TOKEN"),
             "device_id" =>  $school_info->attendance_device,
-            "start_date" => '2020-01-01',
-            "end_date" => '2021-03-22',
+            "start_date" => date('Y-m-d'),
+            "end_date" => date('Y-m-d'),
             "start_time" => "00:00:00",
             "end_time" => "23:59:59"
         );
@@ -85,7 +87,6 @@ class FetchAttendance extends Command
         $result_arr = json_decode($replace_syntax, true);
         $employee_ids = [];
         $student_ids = [];
-
         $employee_attendance_time = [];
         $student_attendance_time = [];
         if ($result_arr != null) {
@@ -104,10 +105,12 @@ class FetchAttendance extends Command
             $employee_attendance = [];
             $student_attendance = [];
             $sms_data = [];
+
             if (count($employee_ids) > 0) {
-                $employees = DB::table('employee')->whereIn("employee.employee_id", $employee_ids)->leftJoin('employee_attendance', function ($join) {
-                    $join->on('employee_attendance.employee_id', '=', 'employee.id')->distinct();
-                })->selectRaw('employee.id, employee.employee_id,max(employee_attendance.access_time) as access_time')->get();
+                $employees = Db::table('employee')->whereIn("employee.employee_id", $employee_ids)->leftJoin('employee_attendance', function ($join) {
+                    $join->on('employee_attendance.employee_id', '=', 'employee.id')->whereBetween("date", [date('Y-m-d'), date('Y-m-d')]);
+                })->groupBy("employee_attendance.employee_id")->selectRaw('employee.id,employee.employee_id, max(access_time) as access_time')->get();
+
 
                 foreach ($employees as $employee) {
                     $attendance_time = $employee_attendance_time[$employee->employee_id]["access_time"];
@@ -139,11 +142,11 @@ class FetchAttendance extends Command
                     EmployeeAttendance::insert($employee_attendance);
                 }
             } else {
-                $students = DB::table('class_has_students')->whereIn("student_identifier", $student_ids)->leftJoin("students_attendance", function ($join) {
-                    $join->on("students_attendance.student_id", "=", "class_has_students.id")->whereBetween("date", [date('Y-m-d'), date('Y-m-d')])->groupBy("students_attendance.student_id");
+                $students = ClassHasStudents::whereIn("student_identifier", $student_ids)->leftJoin("students_attendance", function ($join) {
+                    $join->on("students_attendance.student_id", "=", "class_has_students.id")->whereBetween("date", [date('Y-m-d'), date('Y-m-d')]);
                 })->leftJoin("students", function ($join) {
                     $join->on("students.id", "=", "class_has_students.student_id");
-                })->selectRaw('count(students_attendance.student_id) as attendance_count,class_has_students.id,class_has_students.student_identifier,max(students_attendance.access_time) as access_time,students.primary_phone,students.student_name')->get();
+                })->groupBy("students_attendance.student_id")->selectRaw('count(students_attendance.student_id) as attendance_count,class_has_students.id,class_has_students.student_identifier,max(students_attendance.access_time) as access_time,students.primary_phone,students.student_name')->get();
 
                 foreach ($students as $student) {
                     if ($student_attendance_time[$student->student_identifier] != null) {
