@@ -33,7 +33,7 @@ class MarksController extends Controller
                 $marks = Marks::where([[$query]]);
                 $marks = $marks->leftJoin("class_has_students", "class_has_students.id", "=", "marks.student_id");
                 $marks = $marks->leftJoin("students", "students.id", "=", "class_has_students.student_id");
-                $marks = $marks->orderBy("subject_id")->orderBy("class_has_students.role", 'asc');
+                $marks = $marks->orderBy("class_has_students.role", 'asc');
                 $marks = $marks->get(["class_has_students.role", "class_has_students.student_identifier", "students.student_name", "marks.*"]);
                 return $marks;
             }

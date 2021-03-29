@@ -79,7 +79,7 @@ class StudentController extends Controller
                 "student_name" => "required|string",
                 "gender" => "required",
                 "religion" => "required",
-                "age" => "required",
+                "date_of_birth" => "required",
                 "primary_phone" => "required",
                 "class_id" => "required|numeric",
                 "department_id" => "required|numeric",
@@ -95,7 +95,7 @@ class StudentController extends Controller
             $students->father_name = $request->father_name;
             $students->gender = $request->gender;
             $students->religion = $request->religion;
-            $students->age = $request->age;
+            $students->date_of_birth = $request->date_of_birth;
             $students->primary_phone = $request->primary_phone;
 
             if ($request->student_email != null) {
@@ -159,7 +159,7 @@ class StudentController extends Controller
                 "father_name" => "required|string",
                 "gender" => "required|string",
                 "religion" => "required|string",
-                "age" => "required|numeric",
+                "date_of_birth" => "required|numeric",
                 "primary_phone" => "required",
                 "extended_info" => "required",
                 "enrollment_status" => "required|string",
@@ -171,7 +171,7 @@ class StudentController extends Controller
                 $students->father_name = $request->father_name;
                 $students->gender = $request->gender;
                 $students->religion = $request->religion;
-                $students->age = $request->age;
+                $students->date_of_birth = $request->date_of_birth;
                 $students->primary_phone = $request->primary_phone;
 
                 if ($request->student_email != null) {

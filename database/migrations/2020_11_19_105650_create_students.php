@@ -21,7 +21,7 @@ class CreateStudents extends Migration
             $table->string("student_image")->nullable();
             $table->string("gender");
             $table->string("religion");
-            $table->string("age");
+            $table->date("date_of_birth");
             $table->string("primary_phone");
             $table->string("secondary_phone")->nullable();
             $table->string("student_email")->nullable();
