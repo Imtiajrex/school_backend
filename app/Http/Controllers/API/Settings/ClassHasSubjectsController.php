@@ -18,7 +18,7 @@ class ClassHasSubjectsController extends Controller
     {
         $permission = "View Assigned Subject";
         $user = $request->user();
-        if ($user->can($permission)||$user->user_type=="teacher") {
+        if ($user->can($permission) || $user->user_type == "teacher") {
             $query = [];
             $subjects = [];
             if ($request->class_id != null && $request->department_id != null)
@@ -29,12 +29,12 @@ class ClassHasSubjectsController extends Controller
                 $subjects = $subjects->leftJoin("class", "class.id", '=', 'class_has_subjects.class_id');
                 $subjects = $subjects->leftJoin("department", "department.id", '=', 'class_has_subjects.department_id');
                 return $subjects->get(['class_has_subjects.*', 'subjects.subject_name as name', 'class.id as class_id', 'class.name as class', 'department.name as department', 'department.id as department_id']);
-            }else if($request->exam){
+            } else if ($request->exam) {
                 $subjects = new ClassHasSubjects;
                 $subjects = $subjects->leftJoin("subjects", "subjects.id", '=', 'class_has_subjects.subject_id');
                 $subjects = $subjects->leftJoin("class", "class.id", '=', 'class_has_subjects.class_id');
                 $subjects = $subjects->leftJoin("department", "department.id", '=', 'class_has_subjects.department_id');
-                return $subjects->get(['class_has_subjects.*','subjects.id', 'subjects.subject_name as name', 'class.id as class_id', 'class.name as class', 'department.name as department', 'department.id as department_id']);
+                return $subjects->get(['class_has_subjects.*', 'subjects.id as id', 'subjects.subject_name as name', 'class.id as class_id', 'class.name as class', 'department.name as department', 'department.id as department_id']);
             }
         } else {
             ResponseMessage::unauthorized($permission);
