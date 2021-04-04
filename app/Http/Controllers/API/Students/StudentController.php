@@ -74,13 +74,7 @@ class StudentController extends Controller
         $permission = "Create Students";
         if ($user->can($permission)) {
             $request->validate([
-                "father_name" => "required|string",
-                "mother_name" => "required|string",
                 "student_name" => "required|string",
-                "gender" => "required",
-                "religion" => "required",
-                "date_of_birth" => "required",
-                "primary_phone" => "required",
                 "class_id" => "required|numeric",
                 "department_id" => "required|numeric",
                 "session_id" => "required|numeric",
@@ -91,12 +85,19 @@ class StudentController extends Controller
             $students = new Students;
 
             $students->student_name = $request->student_name;
-            $students->mother_name = $request->mother_name;
-            $students->father_name = $request->father_name;
-            $students->gender = $request->gender;
-            $students->religion = $request->religion;
-            $students->date_of_birth = $request->date_of_birth;
-            $students->primary_phone = $request->primary_phone;
+
+            if ($request->mother_name)
+                $students->mother_name = $request->mother_name;
+            if ($request->father_name)
+                $students->father_name = $request->father_name;
+            if ($request->gender)
+                $students->gender = $request->gender;
+            if ($request->religion)
+                $students->religion = $request->religion;
+            if ($request->date_of_birth)
+                $students->date_of_birth = $request->date_of_birth;
+            if ($request->primary_phone)
+                $students->primary_phone = $request->primary_phone;
 
             if ($request->student_email != null) {
                 $students->student_email = $request->student_email;
@@ -155,24 +156,26 @@ class StudentController extends Controller
         if ($user->can($permission)) {
             $request->validate([
                 "student_name" => "required|string",
-                "mother_name" => "required|string",
-                "father_name" => "required|string",
-                "gender" => "required|string",
-                "religion" => "required|string",
-                "date_of_birth" => "required|numeric",
-                "primary_phone" => "required",
                 "extended_info" => "required",
                 "enrollment_status" => "required|string",
             ]);
             $students = Students::find($id);
             if ($students != null) {
                 $students->student_name = $request->student_name;
-                $students->mother_name = $request->mother_name;
-                $students->father_name = $request->father_name;
-                $students->gender = $request->gender;
-                $students->religion = $request->religion;
-                $students->date_of_birth = $request->date_of_birth;
-                $students->primary_phone = $request->primary_phone;
+
+                if ($request->mother_name)
+                    $students->mother_name = $request->mother_name;
+                if ($request->father_name)
+                    $students->father_name = $request->father_name;
+                if ($request->gender)
+                    $students->gender = $request->gender;
+                if ($request->religion)
+                    $students->religion = $request->religion;
+                if ($request->date_of_birth)
+                    $students->date_of_birth = $request->date_of_birth;
+                if ($request->primary_phone)
+                    $students->primary_phone = $request->primary_phone;
+
 
                 if ($request->student_email != null) {
                     $students->student_email = $request->student_email;
