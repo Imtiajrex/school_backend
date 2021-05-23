@@ -61,7 +61,8 @@ class MarksController extends Controller
             $students = $students->leftJoin("students", "class_has_students.student_id", '=', 'students.id');
             $students = $students->leftJoin("marks", function ($join) use ($exam_id, $subject_id) {
                 $join->on("class_has_students.id", "=", "marks.student_id")->where(["exam_id" => $exam_id, "subject_id" => $subject_id]);
-            })->orderBy("role", 'asc');
+            });
+            $students = $students->orderBy("role", 'asc');
             return $students->get(["students.student_name", "class_has_students.student_identifier", "marks.marks", "class_has_students.id as student_id", "marks.id", "class_has_students.role"]);
         } else {
             return ResponseMessage::unauthorized($permission);
@@ -123,8 +124,9 @@ class MarksController extends Controller
                 return ResponseMessage::fail("Subject Doesn't Exist!");
             $marks = [];
             $gpa_arr = Gpa::get();
-            $to_find = [];
-            $to_update = [];
+            // $to_find = [];
+            // $to_update = [];
+            $err = 0;
             foreach ($mark_data as $m_d) {
                 $m_d["exam_id"] = $exam_id;
                 $m_d["subject_id"] = $subject_id;
@@ -138,18 +140,31 @@ class MarksController extends Controller
                 }
                 $m_d["gpa"] = $gpa;
                 $m_d["marks"] = json_encode($m_d["marks"]);
-                array_push($to_find, ["exam_id" => $exam_id, "student_id" => $m_d["student_id"], "subject_id" => $subject_id]);
-                array_push($to_update, ["absent" => $m_d["absent"], "total_mark" => $m_d["total_mark"], "gpa" => $gpa, "subject_type" => $m_d["subject_type"], "marks" => $m_d["marks"]]);
+
+                $std_spc_mark = Marks::where(["exam_id" => $exam_id, "student_id" => $m_d["student_id"], "subject_id" => $subject_id])->first();
+                if($std_spc_mark!=null)
+                    $mark_op = Marks::where(["id"=>$std_spc_mark->id])->update(["absent" => $m_d["absent"], "total_mark" => $m_d["total_mark"], "gpa" => $gpa, "subject_type" => $m_d["subject_type"], "marks" => $m_d["marks"]]);
+                else
+                    $mark_op = Marks::insert(["exam_id" => $exam_id, "student_id" => $m_d["student_id"], "subject_id" => $subject_id,"absent" => $m_d["absent"], "total_mark" => $m_d["total_mark"], "gpa" => $gpa, "subject_type" => $m_d["subject_type"], "marks" => $m_d["marks"]]);
+                
+                if(!$mark_op) $err++;
+                // array_push($to_find, ["exam_id" => $exam_id, "student_id" => $m_d["student_id"], "subject_id" => $subject_id]);
                 // array_push($marks, $m_d);
             }
-            $i = 0;
-            while ($i < count($to_find)) {
+            // $i = 0;
+            // while ($i < count($to_find)) {
 
-                Marks::updateOrInsert($to_find[$i], $to_update[$i]);
-                $i++;
-            }
+            //     Marks::updateOrInsert($to_find[$i], $to_update[$i]);
+            //     $i++;
+            // }
+            $mark_struct = DB::table('marks_structure')->where(["exam_id" => $exam_id, "subject_id" => $subject_id])->first();
+            if($mark_struct != null)
+            DB::table('marks_structure')->where(["exam_id" => $exam_id, "subject_id" => $subject_id])->update(["exam_id" => $exam_id, "subject_id" => $subject_id, "total_exam_mark" => $request->total_exam_mark, "structure" => $mark_structure]);
+            else DB::table('marks_structure')->insert(["exam_id" => $exam_id, "subject_id" => $subject_id,"exam_id" => $exam_id, "subject_id" => $subject_id, "total_exam_mark" => $request->total_exam_mark, "structure" => $mark_structure]);
 
-            DB::table("marks_structure")->upsert(["id" => $request->mark_structure_id, "exam_id" => $exam_id, "subject_id" => $subject_id, "total_exam_mark" => $request->total_exam_mark, "structure" => $mark_structure], ["id", "exam_id", "subject_id"], ["structure"]);
+            if($err > 0) return ResponseMessage::fail("Failed To Add Marks!");
+            
+
             return ResponseMessage::success("Marks Added!");
         }
     }
