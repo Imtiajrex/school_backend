@@ -146,7 +146,7 @@ class MarksController extends Controller
                     $mark_op = Marks::where(["id"=>$std_spc_mark->id])->update(["absent" => $m_d["absent"], "total_mark" => $m_d["total_mark"], "gpa" => $gpa, "subject_type" => $m_d["subject_type"], "marks" => $m_d["marks"]]);
                 else
                     $mark_op = Marks::insert(["exam_id" => $exam_id, "student_id" => $m_d["student_id"], "subject_id" => $subject_id,"absent" => $m_d["absent"], "total_mark" => $m_d["total_mark"], "gpa" => $gpa, "subject_type" => $m_d["subject_type"], "marks" => $m_d["marks"]]);
-                
+                print_r($mark_op);
                 if(!$mark_op) $err++;
                 // array_push($to_find, ["exam_id" => $exam_id, "student_id" => $m_d["student_id"], "subject_id" => $subject_id]);
                 // array_push($marks, $m_d);
