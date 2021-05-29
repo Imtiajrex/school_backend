@@ -24,7 +24,7 @@ class CreateEmployee extends Migration
             $table->string("employee_post");
             $table->string("employee_gender");
             $table->string("employee_religion");
-            $table->integer("employee_age");
+            $table->date("date_of_birth");
             $table->string("employee_primary_phone", 25);
             $table->string("employee_secondary_phone", 25)->nullable();
             $table->string("employee_email")->nullable();

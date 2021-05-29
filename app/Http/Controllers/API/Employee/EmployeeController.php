@@ -71,7 +71,7 @@ class EmployeeController extends Controller
                 "father_name" => "required|string",
                 "employee_type" => "required",
                 "employee_post" => "required",
-                "employee_age" => "required",
+                "date_of_birth" => "required",
                 "employee_gender" => "required",
                 "employee_religion" => "required",
                 "employee_primary_phone" => "required",
@@ -98,7 +98,7 @@ class EmployeeController extends Controller
             $employee->employee_name = $request->employee_name;
             $employee->employee_type = $request->employee_type;
             $employee->employee_post = $request->employee_post;
-            $employee->employee_age = $request->employee_age;
+            $employee->date_of_birth = $request->date_of_birth;
             $employee->employee_gender = $request->employee_gender;
             $employee->employee_religion = $request->employee_religion;
             $employee->employee_primary_phone = $request->employee_primary_phone;
@@ -158,7 +158,7 @@ class EmployeeController extends Controller
                 "mother_name" => "required|string",
                 "father_name" => "required|string",
                 "employee_post" => "required",
-                "employee_age" => "required",
+                "date_of_birth" => "required",
                 "employee_gender" => "required",
                 "employee_religion" => "required",
                 "employee_primary_phone" => "required",
@@ -173,7 +173,7 @@ class EmployeeController extends Controller
                 $employee->father_name = $request->father_name;
                 $employee->employee_type = $request->employee_type;
                 $employee->employee_post = $request->employee_post;
-                $employee->employee_age = $request->employee_age;
+                $employee->date_of_birth = $request->date_of_birth;
                 $employee->employee_gender = $request->employee_gender;
                 $employee->employee_religion = $request->employee_religion;
                 $employee->employee_primary_phone = $request->employee_primary_phone;
