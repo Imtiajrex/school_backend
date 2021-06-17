@@ -211,7 +211,6 @@ class StudentsPaymentController extends Controller
                 $due = StudentsPaymentAccount::where("students_payment_accounts.id", $payment["payment_info"])->leftJoin("students_payment", "students_payment.id", '=', 'students_payment_accounts.payment_id')->select(["payment_category", "payment_info", "students_payment_accounts.amount"])->first();
                 if ($due) {
                     $due_id = $payment_info;
-                    print_r($due);
                     $payment_info = $due->payment_category . " - " . $due->payment_info;
                     $due_amount = $payment["payment_amount"] - $payment["paid_amount"];
                 }
