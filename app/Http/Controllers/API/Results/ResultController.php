@@ -115,7 +115,7 @@ class ResultController extends Controller
                     }
                     array_push($exam_ids, $exam->id);
                 }
-                $result["student_marks"] = Marks::whereIn("exam_id", $exam_ids)->where(["student_id" => $result->student_id])->get();;
+                $result["student_marks"] = Marks::whereIn("exam_id", $exam_ids)->where(["student_id" => $result->student_id])->groupBy(['student_id', 'subject_id'])->get();;
             }
 
             return $results;
