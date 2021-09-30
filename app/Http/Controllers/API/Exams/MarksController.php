@@ -31,8 +31,8 @@ class MarksController extends Controller
 
             if (count($query) > 0) {
                 $marks = Marks::where(["exam_id"=>$request->exam_id]);
-                $marks = $marks->leftJoin("class_has_students", "class_has_students.id", "=", "marks.student_id");
-                $marks = $marks->leftJoin("students", "students.id", "=", "class_has_students.student_id");
+                $marks = $marks->leftJoin("class_has_students", "marks.student_id", "=", "class_has_students.id");
+                $marks = $marks->leftJoin("students", "class_has_students.student_id", "=", "students.id");
                 $marks = $marks->orderBy("class_has_students.role", 'asc');
                 $marks = $marks->get(["class_has_students.role", "class_has_students.student_identifier", "students.student_name", "marks.*"]);
                 return $marks;
