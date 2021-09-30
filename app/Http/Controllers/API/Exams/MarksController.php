@@ -22,7 +22,10 @@ class MarksController extends Controller
         $permission = "View Marks";
         if ($user->can($permission) || $user->user_type == "teacher" || ($user->user_type == "student" && $user->username == $request->student_id)) {
             $request->validate([
-                "exam_id" => "required|numeric"
+                "exam_id" => "required|numeric",
+                "class_id" => "required|numeric",
+                "department_id" => "required|numeric",
+                "session_id" => "required|numeric"
             ]);
             $query = [];
 
@@ -31,7 +34,12 @@ class MarksController extends Controller
 
             if (count($query) > 0) {
                 $marks = Marks::where(["exam_id"=>$request->exam_id]);
-                $marks = $marks->leftJoin("class_has_students", "marks.student_id", "=", "class_has_students.id");
+                $marks = $marks->leftJoin("class_has_students", function($join)use ($request) {
+                    $join->on("marks.student_id", "=", "class_has_students.id");
+                    $join->where("class_has_students_id.class_id", "=", $request->class_id);
+                    $join->where("class_has_students_id.department_id", "=", $request->department_id);
+                    $join->where("class_has_students_id.session_id", "=", $request->session_id);
+                });
                 $marks = $marks->leftJoin("students", "class_has_students.student_id", "=", "students.id");
                 $marks = $marks->orderBy("class_has_students.role", 'asc');
                 $marks = $marks->get(["class_has_students.role", "class_has_students.student_identifier", "students.student_name", "marks.*"]);
