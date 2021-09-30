@@ -36,9 +36,9 @@ class MarksController extends Controller
                 $marks = Marks::where(["exam_id"=>$request->exam_id]);
                 $marks = $marks->leftJoin("class_has_students", function($join)use ($request) {
                     $join->on("marks.student_id", "=", "class_has_students.id");
-                    $join->where("class_has_students_id.class_id", "=", $request->class_id);
-                    $join->where("class_has_students_id.department_id", "=", $request->department_id);
-                    $join->where("class_has_students_id.session_id", "=", $request->session_id);
+                    $join->where( $request->class_id, "=","class_has_students_id.class_id");
+                    $join->where( $request->session_id, "=","class_has_students_id.session_id");
+                    $join->where( $request->department_id, "=","class_has_students_id.department_id");
                 });
                 $marks = $marks->leftJoin("students", "class_has_students.student_id", "=", "students.id");
                 $marks = $marks->orderBy("class_has_students.role", 'asc');
