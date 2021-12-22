@@ -48,6 +48,7 @@ class ExamController extends Controller
                         foreach (json_decode($exm->subjects) as $sub) {
                             if(Subjects::find($sub) != null){
                                 array_push($subject_names, Subjects::find($sub)->subject_name);
+                            }
                         }
                         $exm["subject_names"] = implode(", ", $subject_names);
                     }
@@ -58,7 +59,7 @@ class ExamController extends Controller
             return ResponseMessage::unauthorized($permission);
         }
     }
-    
+
     public function getExamSubjects(Request $request)
     {
         $user = $request->user();
