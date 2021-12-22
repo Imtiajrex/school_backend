@@ -46,9 +46,9 @@ class ExamController extends Controller
                     foreach ($exam_data as $exm) {
                         $subject_names = [];
                         foreach (json_decode($exm->subjects) as $sub) {
-                            // if(Subjects::find($sub) != null){
+                            if(Subjects::find($sub) != null){
                                 array_push($subject_names, Subjects::find($sub)->subject_name);
-                            // }
+                            }
                         }
                         $exm["subject_names"] = implode(", ", $subject_names);
                     }
