@@ -48,7 +48,7 @@ class SMSController extends Controller
                     'message' => "$message",
                     'token' => "$token"
                 ); // Add parameters in key value
-
+                
                 $ch = curl_init(); // Initialize cURL
                 curl_setopt($ch, CURLOPT_URL, $url);
                 curl_setopt($ch, CURLOPT_ENCODING, '');
@@ -135,8 +135,6 @@ class SMSController extends Controller
                     'message' => "$message",
                     'token' => "$token"
                 ); // Add parameters in key value
-                
-                return $data;
                 $ch = curl_init(); // Initialize cURL
                 curl_setopt($ch, CURLOPT_URL, $url);
                 curl_setopt($ch, CURLOPT_ENCODING, '');
