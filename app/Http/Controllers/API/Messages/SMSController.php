@@ -136,7 +136,7 @@ class SMSController extends Controller
                     'token' => "$token"
                 ); // Add parameters in key value
                 
-                return ResponseMessage::success("Sent All Messages.\n Sent: " . $data);
+                return $data;
                 $ch = curl_init(); // Initialize cURL
                 curl_setopt($ch, CURLOPT_URL, $url);
                 curl_setopt($ch, CURLOPT_ENCODING, '');
