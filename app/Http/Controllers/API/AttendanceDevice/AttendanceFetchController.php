@@ -43,7 +43,7 @@ class AttendanceFetchController extends Controller
                     return ResponseMessage::fail("Card Assignment Failed!");
                 }
             } else {
-                return ResponseMessage::fail("Card Assignment Failed!");
+                return ResponseMessage::fail("Card Assignment Failed!"+$result);
             }
         }
     }
