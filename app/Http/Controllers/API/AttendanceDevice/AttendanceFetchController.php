@@ -36,7 +36,6 @@ class AttendanceFetchController extends Controller
             $replace_syntax = str_replace('{"log":', "", $result);
 
             $result_array = json_decode($replace_syntax, true);
-            return $result;
             if ($result_array != null) {
                 if ($result_array['success'] == 'User Successfully Registered') {
                     return ResponseMessage::success("Card Successfully Assigned!");
