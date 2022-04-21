@@ -79,8 +79,11 @@ class EmployeeController extends Controller
 
 
             $current_year = date('Y') - 2000;
-            $total_employee = Employee::all()->count();
-            $employee_id = ($current_year * 10000) + $total_employee + 1;
+            
+            $last_employee = Employee::latest()->first();
+            
+
+            $employee_id = ($current_year * 10000) + $last_employee->id + 1;
             while (Employee::where("employee_id", $employee_id)->first() != null) {
                 $employee_id++;
             }
