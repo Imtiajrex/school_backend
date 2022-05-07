@@ -37,7 +37,7 @@ class AttendanceFetchController extends Controller
 
             $result_array = json_decode($replace_syntax, true);
             if ($result_array != null) {
-                if ($result_array['success'] == 'User Successfully Registered') {
+                if ($result_array['success'] == 'User Successfully Registered' || $result_array['success'] == 'User Successfully Updated') {
                     return ResponseMessage::success("Card Successfully Assigned!");
                 } else {
                     return ResponseMessage::fail("Card Assignment Failed!");
