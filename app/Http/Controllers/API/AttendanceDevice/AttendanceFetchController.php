@@ -19,7 +19,7 @@ class AttendanceFetchController extends Controller
                 "card" => "required",
             ]);
             $school_info = InstituteInfo::first();
-            $id = $school_info->institute_shortform . $request->id;
+            $id =  $request->id;
             $data = array("operation" => "add_user", "auth_user" => env("ATTENDANCE_DEVICE_USER"), "signature_type" => "card", "auth_code"
             => env("ATTENDANCE_DEVICE_TOKEN"), "username" => $id, "signature" => $request->card, "device_id" => $school_info->attendance_device);
 
