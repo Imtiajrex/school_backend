@@ -46,6 +46,7 @@ class FetchAttendance extends Command
      */
     public function handle()
     {
+        
         $school_info = DB::table("institute_info")->first();
         $employee_prefix = "T";
         $student_prefix = "STD";
@@ -92,7 +93,7 @@ class FetchAttendance extends Command
         if ($result_arr != null) {
             foreach ($result_arr as $data) {
                 $id = str_replace($prefix, "", $data["registration_id"]);
-                if (str_contains($id, $employee_prefix)) {
+                if ( strpos($id, 'EMP') === 0 ||  strpos($id, 'E') === 0 || strpos($id, 'T') === 0) {
 
                     array_push($employee_ids, $id);
                     $employee_attendance_time[$id] = ["access_time" => $data["access_time"], "date" => $data["access_date"]];
