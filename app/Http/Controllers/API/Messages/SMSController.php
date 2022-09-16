@@ -154,7 +154,7 @@ class SMSController extends Controller
                         $failed_numbers = $failed_numbers . " " . $res->to;
                     }
                 }
-                if ($sent > 0) {
+                if (intval($sent) > 0) {
                     $sms_account->balance = $sms_account->balance - $sent * $sms_account->rate;
                     $sms_account->total_sent_sms = $sms_account->total_sent_sms + $sent;
                     $sms_account->save();
