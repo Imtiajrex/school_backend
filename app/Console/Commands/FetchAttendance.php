@@ -93,10 +93,6 @@ class FetchAttendance extends Command
         if ($result_arr != null) {
             foreach ($result_arr as $data) {
                 $id = str_replace($prefix, "", $data["registration_id"]);
-<<<<<<< HEAD
-=======
-                if ( strpos($id, 'EMP') === 0 ||  strpos($id, 'E') === 0 || strpos($id, 'T') === 0) {
->>>>>>> 0fecaafaf96477fe5efb90c777078400ef357032
 
                 if ( strpos($id, 'EMP') === 0 ||  strpos($id, 'E') === 0 || strpos($id, 'T') === 0) {
                     array_push($employee_ids, $id);
