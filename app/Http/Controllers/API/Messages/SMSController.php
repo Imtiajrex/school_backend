@@ -110,7 +110,6 @@ class SMSController extends Controller
                 $students = ClassHasStudents::where($query)->leftJoin("students", "students.id", "=", "class_has_students.student_id")->groupBy("class_has_students.session_id")->selectRaw("group_concat(primary_phone) as number")->first();
 
                 print_r($students);
-                return;
 
 
                 $to = "";
@@ -125,7 +124,7 @@ class SMSController extends Controller
                     else $to=$to.",".$num;
                     $i++;
                 }
-
+                return;
                 $token = env("SMS_TOKEN");
                 $message = $request->message;
 
