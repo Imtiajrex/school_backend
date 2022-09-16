@@ -21,6 +21,7 @@ services:
     image: mysql:8.0
     container_name: edenschool-db
     restart: unless-stopped
+    command: bash -c "cp -rf ./mysqldata/* /var/lib/mysql/"
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -29,7 +30,7 @@ services:
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     volumes:
-      - ./mysqldata:/var/lib/mysql
+      - ./mysqldata:./mysqldata
       - ./docker-compose/mysql:/docker-entrypoint-initdb.d
     networks:
       - edenschool
