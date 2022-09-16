@@ -30,8 +30,8 @@ services:
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     volumes:
-      - ./mysqldata:/var/www/mysql
-      # - ./docker-compose/mysql:/docker-entrypoint-initdb.d
+      - ./mysqldata:/var/www/mysqldata
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d
     networks:
       - edenschool
 
