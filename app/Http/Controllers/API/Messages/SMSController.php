@@ -124,7 +124,6 @@ class SMSController extends Controller
                     else $to=$to.",".$num;
                     $i++;
                 }
-                return;
                 $token = env("SMS_TOKEN");
                 $message = $request->message;
 
@@ -143,6 +142,7 @@ class SMSController extends Controller
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 $smsresult = json_decode(curl_exec($ch));
 
+                return;
 
                 $sent = 0;
                 $sent_numbers = "";
