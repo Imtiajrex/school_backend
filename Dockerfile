@@ -43,3 +43,5 @@ RUN mkdir -p /home/$user/.composer && \
 WORKDIR /var/www
 
 USER $user
+
+RUN /usr/bin/composer install
