@@ -162,7 +162,7 @@ class SMSController extends Controller
                 if ($sent == $total_sms) {
                     return ResponseMessage::success("Sent All Messages.\n Sent: " . $sent_numbers);
                 } else {
-                    return ResponseMessage::fail("Sent " . $sent . " Failed " . $total_sms - $sent . ".\n Sent: " . $sent_numbers . "\n Failed: " . $failed_numbers);
+                    return ResponseMessage::fail("Sent " . $sent . " Failed " . intval($total_sms) - intval($sent) . ".\n Sent: " . $sent_numbers . "\n Failed: " . $failed_numbers);
                 }
             }
         } else {
