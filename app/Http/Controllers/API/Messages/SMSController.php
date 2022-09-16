@@ -142,7 +142,6 @@ class SMSController extends Controller
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 $smsresult = json_decode(curl_exec($ch));
 
-                return;
 
                 $sent = 0;
                 $sent_numbers = "";
@@ -155,6 +154,7 @@ class SMSController extends Controller
                         $failed_numbers = $failed_numbers . " " . $res->to;
                     }
                 }
+                return;
                 if ($sent > 0) {
                     $sms_account->balance = $sms_account->balance - $sent * $sms_account->rate;
                     $sms_account->total_sent_sms = $sms_account->total_sent_sms + $sent;
