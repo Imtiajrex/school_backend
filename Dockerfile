@@ -1,5 +1,7 @@
 FROM php:7.4-fpm
 
+ENV TZ Asia/Dhaka
+
 # Arguments defined in docker-compose.yml
 ARG user
 ARG uid
