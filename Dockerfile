@@ -44,4 +44,6 @@ WORKDIR /var/www
 
 USER $user
 
+RUN rm -rf vendor composer.lock
+
 RUN /usr/bin/composer install
