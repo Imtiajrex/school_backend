@@ -41,8 +41,6 @@ services:
       VIRTUAL_HOST: api.edenresidentialschool.edu.bd
       LETSENCRYPT_HOST: api.edenresidentialschool.edu.bd
       VIRTUAL_PORT: 80
-    ports:
-      - 80:80
     volumes:
       - ./:/var/www
       - ./docker-compose/nginx:/etc/nginx/conf.d/
