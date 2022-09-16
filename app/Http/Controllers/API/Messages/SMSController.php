@@ -159,7 +159,6 @@ class SMSController extends Controller
                     $sms_account->total_sent_sms = $sms_account->total_sent_sms + $sent;
                     $sms_account->save();
                 }
-                return;
                 $total_sms = count($smsresult);
                 if ($sent == $total_sms) {
                     return ResponseMessage::success("Sent All Messages.\n Sent: " . $sent_numbers);
