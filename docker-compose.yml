@@ -1,33 +1,22 @@
 version: "2"
 services:
   nginx-proxy:
-    image: nginxproxy/nginx-proxy
-    container_name: nginx-proxy
+    image: jwilder/nginx-proxy
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - conf:/etc/nginx/conf.d
-      - vhost:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
-      - certs:/etc/nginx/certs:ro
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-    networks:
-      - edenschool
+      - "/etc/nginx/vhost.d"
+      - "/usr/share/nginx/html"
+      - "/var/run/docker.sock:/tmp/docker.sock:ro"
+      - "/etc/nginx/certs"
 
-  # acme-companion:
-  #   image: nginxproxy/acme-companion
-  #   container_name: nginx-proxy-acme
-  #   environment:
-  #     - DEFAULT_EMAIL=mail@yourdomain.tld
-  #   volumes_from:
-  #     - nginx-proxy
-  #   volumes:
-  #     - certs:/etc/nginx/certs:rw
-  #     - acme:/etc/acme.sh
-  #     - /var/run/docker.sock:/var/run/docker.sock:ro
-  #   networks:
-  #     - edenschool
+  letsencrypt-nginx-proxy-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    volumes_from:
+      - "nginx-proxy"
   app:
     build:
       args:
@@ -41,8 +30,6 @@ services:
     working_dir: /var/www/
     volumes:
       - ./:/var/www
-    networks:
-      - edenschool
 
   db:
     image: mysql:8.0
@@ -58,8 +45,6 @@ services:
     volumes:
       - ./mysqldata:/var/lib/mysql
       - ./docker-compose/mysql:/docker-entrypoint-initdb.d
-    networks:
-      - edenschool
 
   nginx:
     image: nginx:alpine
@@ -72,14 +57,3 @@ services:
     volumes:
       - ./:/var/www
       - ./docker-compose/nginx:/etc/nginx/conf.d/
-    networks:
-      - edenschool
-volumes:
-  conf:
-  vhost:
-  html:
-  certs:
-  acme:
-networks:
-  edenschool:
-    driver: bridge
