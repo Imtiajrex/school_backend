@@ -15,7 +15,6 @@ services:
       - ./:/var/www
     networks:
       - edenschool
-      - net
 
   db:
     image: mysql:8.0
@@ -47,10 +46,6 @@ services:
       - ./docker-compose/nginx:/etc/nginx/conf.d/
     networks:
       - edenschool
-      - net
-
 networks:
   edenschool:
     driver: bridge
-  net:
-    external: true
