@@ -13,3 +13,5 @@ yarn-error.log
 /mysqldata
 composer.lock
 .env.development
+.gitignore
+branch_structure.json
